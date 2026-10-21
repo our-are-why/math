@@ -1,0 +1,18 @@
+# Shared dev tooling comes from image_develop-base: see
+# .apple-container/image_develop-base/
+FROM image_develop-base
+
+USER root
+
+# Python and C for the reference implementations (build-essential brings gcc,
+# make and the C headers).
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Node for the TypeScript reference implementation, copied from the official
+# image (same Debian release as the base). Only the node binary: no npm.
+COPY --from=node:24.22.0-trixie-slim /usr/local/bin/node /usr/local/bin/node
+
+USER coder

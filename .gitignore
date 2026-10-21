@@ -1,0 +1,5 @@
+# code-server's data for this project: extensions and editor state
+.coder-data/
+
+# macOS Finder metadata
+.DS_Store
