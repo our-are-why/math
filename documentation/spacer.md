@@ -3,12 +3,12 @@
 a **spacer** is a one-dimensional, discrete space made of cells, where each
 cell is in one of two states.
 
-    ■ ■ □ □ □ ■ □ □
+    ■ ■ ◇ ◇ ◇ ■ ◇ ◇
 
 - **one-dimensional**: the cells lie along a single dimension. from any cell
   you can only step one way or the other
 - **discrete**: it's made of separate cells, with no positions in between
-- **two states**: each cell is in exactly one of them, drawn here as ■ and □
+- **two states**: each cell is in exactly one of them, drawn here as ■ and ◇
 
 the picture runs left to right, but that's only one way to draw it: a spacer
 isn't horizontal, or in time, or laid out in any particular way.
@@ -19,7 +19,7 @@ a spacer can be read in two ways. the cells and their states stay the same;
 what changes is which cells are neighbours, and what a cell's position means.
 
     cell   0 1 2 3 4 5 6 7
-           ■ ■ □ □ □ ■ □ □
+           ■ ■ ◇ ◇ ◇ ■ ◇ ◇
 
 - **circular**: the last cell is next to the first. there are no ends and
   every cell is alike: cell 0 is just where we start counting. a position is
@@ -35,7 +35,7 @@ it becomes a line; join a line's two ends and it becomes a circle again.
 
 ## filled and empty
 
-a cell's two states are called **filled** (■) and **empty** (□). in other
+a cell's two states are called **filled** (■) and **empty** (◇). in other
 settings the same pair shows up as 1 and 0, or true and false.
 
 which state is which is a choice, but not an arbitrary one: filled cells are
@@ -45,7 +45,7 @@ the things being spaced, and empty cells are the space between them.
 - **density**: how many of them are filled
 - **sparsity**: how many are empty
 
-      ■ ■ □ □ □ ■ □ □     resolution 8, density 3, sparsity 5
+      ■ ■ ◇ ◇ ◇ ■ ◇ ◇     resolution 8, density 3, sparsity 5
 
 density and sparsity always add up to the resolution.
 
@@ -53,7 +53,7 @@ these three say how many cells of each kind there are, not where they are,
 so many spacers share the same three. with 4 cells, 2 of them filled, there
 are six:
 
-    ■ ■ □ □    ■ □ ■ □    ■ □ □ ■    □ ■ ■ □    □ ■ □ ■    □ □ ■ ■
+    ■ ■ ◇ ◇    ■ ◇ ■ ◇    ■ ◇ ◇ ■    ◇ ■ ■ ◇    ◇ ■ ◇ ■    ◇ ◇ ■ ■
 
 swap every cell's state and you get the spacer's **negative**: the same
 arrangement/distribution, seen from its empty space. the negative's density is
@@ -109,7 +109,7 @@ an interval is always one more than its gap: the gap, plus the step onto the
 next point.
 
     cell        0 1 2 3 4 5 6 7
-                ■ ■ □ □ □ ■ □ □       points 0, 1, 5
+                ■ ■ ◇ ◇ ◇ ■ ◇ ◇       points 0, 1, 5
 
     circular    intervals  1 4 3      add up to the resolution, 8
                 gaps       0 3 2      add up to the sparsity, 5
@@ -137,8 +137,8 @@ as long as it goes. a band of two or more cells is a **run**. (**panel** would
 work as well as band: panels are what seams join.)
 
     cell      0 1 2 3 4 5 6 7
-              ■ ■ □ □ □ ■ □ □
-    bands     ■ ■ | □ □ □ | ■ | □ □       4 bands, 3 of them runs
+              ■ ■ ◇ ◇ ◇ ■ ◇ ◇
+    bands     ■ ■ | ◇ ◇ ◇ | ■ | ◇ ◇       4 bands, 3 of them runs
 
 - **linear**: `<xx...x..>` has 3 seams and 4 bands, so one more band than seams
 - **circular**: the last and first cells are neighbours too, so there can be a
@@ -167,9 +167,9 @@ a spacer puts no condition on which of its cells are filled: any
 arrangement/distribution of filled and empty cells is a spacer, whether it
 follows a clear pattern, has some structure, or has no rhyme or reason.
 
-    ■ ■ □ □ ■ ■ □ □     a repeating pattern
-    ■ ■ ■ □ □ □ □ □     one block
-    ■ ■ □ □ □ ■ □ □     no particular pattern
+    ■ ■ ◇ ◇ ■ ■ ◇ ◇     a repeating pattern
+    ■ ■ ■ ◇ ◇ ◇ ◇ ◇     one block
+    ■ ■ ◇ ◇ ◇ ■ ◇ ◇     no particular pattern
 
 so two things need keeping apart:
 
@@ -269,27 +269,37 @@ inward.
 ### the display form
 
 in the display form, the shapes of the cells carry the view, so no edges are
-needed. each shape is its typed edges closed up into every cell:
+needed. each shape is its typed edges closed up into every cell, and filled
+and empty always differ twice: in fill, and in size, direction or turn:
 
-    )xx...x..(    ● ● ○ ○ ○ ● ○ ○         circles, from round brackets
-    <xx...x..>    ◆ ◆ ◇ ◇ ◇ ◆ ◇ ◇         diamonds: < and > together make one
-    |xx...x..|    ■ ■ □ □ □ ■ □ □         squares, from straight walls
-    [xx...x..]    [ ◆ ◆ ◇ ◇ ◇ ◆ ◇ ◇ ]     a piece is linear in its own terms;
+    )xx...x..(    ● ● ⚬ ⚬ ⚬ ● ⚬ ⚬         circles, from round brackets: big filled,
+                                          small empty
+    <xx...x..>    ▲ ▲ ▽ ▽ ▽ ▲ ▽ ▽         triangles, from < and > turned upright:
+                                          filled up, empty down
+    |xx...x..|    ■ ■ ◇ ◇ ◇ ■ ◇ ◇         squares, from straight walls: filled
+                                          square, empty square turned (a diamond)
+    [xx...x..]    [ ▲ ▲ ▽ ▽ ▽ ▲ ▽ ▽ ]     a piece is linear in its own terms;
                                           the brackets say there's more beyond
     |><|          |▶◀|                    zero
 
 a single ● can't be mistaken for anything else, so the shapes do the job the
-edges do in the typed form. the figures before this section use squares: no
-view chosen yet. where no cells are drawn (in points, labels and scopes,
+edges do in the typed form. the figures before this section use the neutral
+shapes: no view chosen yet. where no cells are drawn (in points, labels and scopes,
 below), the edges stay, with → and − in place of -> and -. square brackets
-around cells get a space inside them, like the cells do: `[ ◆ ◇ ◆ ]`. ranges
+around cells get a space inside them, like the cells do: `[ ▲ ▽ ▲ ]`. ranges
 and other numbers stay as they are: `[5→8]`.
 
-the display form needs geometric shapes (● ○ ◆ ◇ ■ □), which most modern fonts
+the display form needs geometric shapes (● ⚬ ▲ ▽ ■ ◇), which most modern fonts
 include. some terminals give them two columns instead of one, which can upset
-alignment. where they aren't available, write the typed form, or any other
-symbols that follow the five rules: the shapes are one read-optimized choice,
-not the only one.
+alignment; ⚬ is drawn narrower than the others there, so circular rows are the
+first to go out of line. where they aren't available, write the typed form, or
+any other symbols that follow the five rules: the shapes are one read-optimized
+choice, not the only one.
+
+(a tangent: having filled and empty differ twice spends a second visual
+difference, size, direction or turn, that could otherwise carry something
+else. if a later use needs to show an extra property of each cell, that
+second difference is the first thing to give back.)
 
 ### points
 
@@ -405,12 +415,14 @@ a piece of a piece follows a few rules:
    as the end stays inside the piece, and `-` for walking the other way
 
 **back to the root.** because each piece stays inside its parent, any piece of
-a piece is one unbroken stretch of the original spacer, its **root**. to find
-where it sits there, go up one level at a time: add the parent's start to the
-piece's start. if the parent walked −, subtract instead, and flip the
-direction. you can stop at any level on the way up. a start can come out below
-0, which can only happen in a circular root: at resolution 8, −2 and 6 name the
-same cell, but −2 keeps how it was reached. either can be written.
+a piece is one unbroken stretch of the spacer the chain was first taken from,
+its **root**. if that spacer is itself a layer (see "layers"), the chain stops
+there, in the layer's numbering. to find where a piece sits in its root, go up
+one level at a time: add the parent's start to the piece's start. if the parent
+walked −, subtract instead, and flip the direction. you can stop at any level
+on the way up. a start can come out below 0, which can only happen in a
+circular root: at resolution 8, −2 and 6 name the same cell, but −2 keeps how
+it was reached. either can be written.
 
     B starts at A's cell 2, and A starts at S's cell 5:   5 + 2 = 7
     B in S:   )8: S([7+2]  =  )8: S([7->9]          →  [.xx]
@@ -442,7 +454,7 @@ first: starting `)xx...x..(` at cell 5 gives `)x..xx...(`; in points,
 write each cell's state as 1 for filled and 0 for empty and you get a binary
 string:
 
-    ■ ■ □ □ □ ■ □ □   →   11000100
+    ■ ■ ◇ ◇ ◇ ■ ◇ ◇   →   11000100
 
 it's a familiar way to write something like a spacer, and it follows the first
 three rules above, though not the fourth. we don't call a spacer a binary
@@ -471,6 +483,72 @@ encoding (bits, digits, codes).
 
 **digits are needed for other things.** this is rule 4 above: digits stay
 numbers. a 0 would also read as zero (no cells at all).
+
+## layers
+
+a spacer's filled cells can become the cells of another spacer. that second
+spacer is a **layer**: it chooses among the first one's points. the first
+spacer is the **root**, as with scopes.
+
+    cell      0 1 2 3 4 5 6 7
+    root      ■ ■ ◇ ◇ ◇ ■ ◇ ◇      points 0, 1, 5
+    layer     ■ ◇       ■          its 3 cells are the root's 3 points; it keeps 0 and 5
+
+a stack can go deeper: a layer's points can carry a further layer, and so on.
+
+- **the fitting rule**: a layer's resolution is the density of the layer above
+  it. it can only choose among points that are there
+- **distance at two scales**: in the layer, its cells 0 and 2 are two steps
+  apart, since its steps go from point to point. on the root, the same two
+  cells are five steps apart
+- **one reading**: every layer is read the way its root is. points round a
+  circle stay in circular order; points along a line stay in line order
+- **each layer's own conventions**: a layer has its own cell 0 and direction,
+  like any spacer
+- **zero ends a stack**: if a layer is all empty, a layer below it would have
+  no cells, which is zero. so a stack stops at its first all-empty layer
+- **flattening**: the deepest layer's choices can be shown on the root's
+  cells: here, `|x....x..|`. the flattened spacer doesn't show it was chosen in
+  steps; like any origin, the stack lives outside the cells
+
+layers aren't scopes. a scope takes a stretch of neighbouring cells; a layer
+chooses among points, skipping the cells in between. both nest and both chain,
+and they can be mixed: a scope of a layer is a stretch of consecutive points.
+
+a scope of a layer stays in the layer's context: going back up through scopes
+stops at the layer. placing it on the stack's root means following the layers
+up, which is flattening, not scoping, and a stretch of consecutive points in a
+layer can be scattered across the root: in `|xx...x..| >> |x.x|`, the layer's
+cells 1 and 2 are the root's cells 1 and 5.
+
+### writing layers
+
+a stack can be written from either end. each `>>` or `<<` points at the deeper
+layer:
+
+    |xx...x..| >> |x.x|          top-down: the root first, then the layer that chooses from its points
+    |x.x| << |xx...x..|          bottom-up: the layer first, placed into the root's points
+    |8: 0,1,5| >> |3: 0,2|       point form: the root has 3 points, so the layer has 3 cells
+    A >> B >> C                  labels, to any depth; C << B << A is the same stack
+
+- top-down reads as choosing: start from the root and pick points layer by
+  layer. bottom-up reads as placing: start from a small spacer and fit it into
+  larger ones
+- every layer repeats the root's edges, so a circular stack is `)…( >> )…(`. a
+  stack can't mix readings
+- a chain goes one way only: `A >> B << C` isn't written
+
+in the display form, the root sits at the top, whichever way the stack is
+written, and each layer's cells sit under the points they stand for:
+
+    ■ ■ ◇ ◇ ◇ ■ ◇ ◇
+    ■ ◇       ■
+
+### cells that open into spacers
+
+a different kind of nesting, noted here as a concept only: each cell of a
+spacer opens into a spacer of its own, the way a tile can be divided into
+smaller tiles. it's close to refinement, and it's left for later.
 
 ## going to infinity
 
