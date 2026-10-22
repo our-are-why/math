@@ -13,6 +13,11 @@ cell is in one of two states.
 the picture runs left to right, but that's only one way to draw it: a spacer
 isn't horizontal, or in time, or laid out in any particular way.
 
+a spacer is one kind of discrete space: one dimension, with each cell in one of
+two states. spaces can have more dimensions, and their cells can hold other
+kinds of values. those are other paths to explore, noted here and not followed
+yet; one comes up with weights.
+
 ## circular and linear
 
 a spacer can be read in two ways. the cells and their states stay the same;
@@ -494,7 +499,8 @@ spacer is the **root**, as with scopes.
     root      ■ ■ ◇ ◇ ◇ ■ ◇ ◇      points 0, 1, 5
     layer     ■ ◇       ■          its 3 cells are the root's 3 points; it keeps 0 and 5
 
-a stack can go deeper: a layer's points can carry a further layer, and so on.
+layers form a **cascade**, which can go deeper: a layer's points can carry a
+further layer, and so on.
 
 - **the fitting rule**: a layer's resolution is the density of the layer above
   it. it can only choose among points that are there
@@ -505,40 +511,40 @@ a stack can go deeper: a layer's points can carry a further layer, and so on.
   circle stay in circular order; points along a line stay in line order
 - **each layer's own conventions**: a layer has its own cell 0 and direction,
   like any spacer
-- **zero ends a stack**: if a layer is all empty, a layer below it would have
-  no cells, which is zero. so a stack stops at its first all-empty layer
+- **zero ends a cascade**: if a layer is all empty, a layer below it would have
+  no cells, which is zero. so a cascade stops at its first all-empty layer
 - **flattening**: the deepest layer's choices can be shown on the root's
   cells: here, `|x....x..|`. the flattened spacer doesn't show it was chosen in
-  steps; like any origin, the stack lives outside the cells
+  steps; like any origin, the cascade lives outside the cells
 
 layers aren't scopes. a scope takes a stretch of neighbouring cells; a layer
 chooses among points, skipping the cells in between. both nest and both chain,
 and they can be mixed: a scope of a layer is a stretch of consecutive points.
 
 a scope of a layer stays in the layer's context: going back up through scopes
-stops at the layer. placing it on the stack's root means following the layers
+stops at the layer. placing it on the cascade's root means following the layers
 up, which is flattening, not scoping, and a stretch of consecutive points in a
 layer can be scattered across the root: in `|xx...x..| >> |x.x|`, the layer's
 cells 1 and 2 are the root's cells 1 and 5.
 
 ### writing layers
 
-a stack can be written from either end. each `>>` or `<<` points at the deeper
+a cascade can be written from either end. each `>>` or `<<` points at the deeper
 layer:
 
     |xx...x..| >> |x.x|          top-down: the root first, then the layer that chooses from its points
     |x.x| << |xx...x..|          bottom-up: the layer first, placed into the root's points
     |8: 0,1,5| >> |3: 0,2|       point form: the root has 3 points, so the layer has 3 cells
-    A >> B >> C                  labels, to any depth; C << B << A is the same stack
+    A >> B >> C                  labels, to any depth; C << B << A is the same cascade
 
 - top-down reads as choosing: start from the root and pick points layer by
   layer. bottom-up reads as placing: start from a small spacer and fit it into
   larger ones
-- every layer repeats the root's edges, so a circular stack is `)…( >> )…(`. a
-  stack can't mix readings
+- every layer repeats the root's edges, so a circular cascade is `)…( >> )…(`. a
+  cascade can't mix readings
 - a chain goes one way only: `A >> B << C` isn't written
 
-in the display form, the root sits at the top, whichever way the stack is
+in the display form, the root sits at the top, whichever way the cascade is
 written, and each layer's cells sit under the points they stand for:
 
     ■ ■ ◇ ◇ ◇ ■ ◇ ◇
@@ -549,6 +555,64 @@ written, and each layer's cells sit under the points they stand for:
 a different kind of nesting, noted here as a concept only: each cell of a
 spacer opens into a spacer of its own, the way a tile can be divided into
 smaller tiles. it's close to refinement, and it's left for later.
+
+## sets, stacks and weights
+
+a **set** groups spacers together, each at most once, in no order: `{A, B, C}`.
+a description is a set too: `{r: 8, d: 3}` is every spacer that fits.
+
+a **stack** lines spacers of the same resolution up cell by cell, in the order
+they're put on: `(A, B, C)`. a stack can hold the same spacer more than once,
+and each copy counts.
+
+    cell      0 1 2 3 4 5 6 7
+    A         ■ ■ ◇ ◇ ◇ ■ ◇ ◇
+    B         ■ ◇ ◇ ■ ◇ ■ ◇ ◇
+    C         ◇ ■ ◇ ◇ ◇ ■ ■ ◇
+              ---------------
+    weights   2 2 0 1 0 3 1 0
+
+- the **cell weights** count the filled cells in each column. they don't depend
+  on the order, so a set of spacers with the same resolution gives the same
+  weights as a stack: `{A, B, C}` and `(A, B, C)` agree here
+- the weights live in a space of their own: the same cells and reading as the
+  stack, but each cell holds an amount instead of one of two states. so a row
+  of weights isn't a spacer
+- the weights add up to the members' densities together (9 here), and no
+  weight is more than the number of members
+- a member's **score** is the weights added up at its points: how much it
+  agrees with the whole, itself included. A scores 2 + 2 + 3 = 7; B and C
+  score 6 each
+- a stack's **build-up** is its running weights as each member goes on.
+  unlike the final weights, it depends on the order:
+
+      after A    1 1 0 0 0 1 0 0
+      after B    2 1 0 1 0 2 0 0
+      after C    2 2 0 1 0 3 1 0
+
+weights are a derived result, and for most stacks they're just that: a count.
+but when the spacers going in are patterned, the weights can carry structure of
+their own, and become objects worth studying in their own right: a space of
+amounts, where the amount works almost like an extra dimension. that world is
+noted here, not explored.
+
+weights are written as a row of numbers, which are amounts, not states (rule
+4): `|2 2 0 1 0 3 1 0|`.
+
+("weight" has another meaning in coding theory, where a string's weight is its
+number of 1s; here, that's density. cell weights are always per cell, across a
+set or stack.)
+
+stacking lines cells up by their numbers, so it takes each spacer exactly as
+written: `)x.x..(` and `)x..x.(` add to different columns, although read
+circularly one is the other started from a different cell. combining spacers
+is one of the places where identity gets decided.
+
+the reading carries through: circular spacers give circular weights, and
+linear ones give linear weights. a stack of neutral spacers leaves the reading
+open, so its weights can be read however the use needs. writing the members
+circular or linear says the reading is part of the structure; writing them
+neutral says it's a perspective for later. for now, a stack can't mix readings.
 
 ## going to infinity
 
@@ -579,6 +643,13 @@ arrow gives one possible result: `Coin{r: 8} -> |x..x.xx.|` is one run out of
 only cover a range of resolutions, ones that run on without end, and for how
 rules are written (directly cell by cell, step by step from earlier spacers, or
 case by case).
+
+as a shorthand, the values can go in round brackets, in a fixed order and
+without keys: `Primes(8) -> |..xx.x.x|`. the order has to be stated for each
+generator, the way a short key is mapped: for `Primes`, the one value is the
+resolution. braces have no order, so in braces every value needs its key. a
+label directly before round brackets gives a generator its values; round
+brackets on their own are a stack.
 
 generators are described by a few independent **facets**. each can be read on
 its own, and any combination can occur, with one exception noted below.

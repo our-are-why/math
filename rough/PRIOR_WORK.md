@@ -20,6 +20,7 @@ experiments and findings: [SESSION_2026-10-19.md](SESSION_2026-10-19.md), [SESSI
 - [broader fields](#broader-fields)
   - [continuous perspective](#continuous-perspective)
   - [from discrete to continuous](#from-discrete-to-continuous)
+- [to explore: values with more dimensions](#to-explore-values-with-more-dimensions)
 - [reading list](#reading-list)
 - [search terms](#search-terms)
 
@@ -667,6 +668,74 @@ spectra.
 - take the Fourier transform of weight families (Wiener–Khinchin) and see what
   the spectra converge to
 
+## to explore: values with more dimensions
+
+noted 2026-10-22, while working on weights in `documentation/spacer.md`. a
+spacer's cells hold two states, weights hold amounts, and steps carry a sign.
+what kinds of number carry even more in a single value, and how could one
+symbol show it? everything here is _from memory_ unless marked; check before
+citing.
+
+### a ladder of values
+
+| kind            | one value holds                  | where it shows up in the project       | status      |
+| --------------- | -------------------------------- | -------------------------------------- | ----------- |
+| two states      | in or out                        | a spacer's cells                       | —           |
+| natural numbers | how much                         | cell weights (heights)                 | —           |
+| integers        | how much, and which way          | signed steps (+5, −3)                  | —           |
+| real numbers    | any amount, fractions too        | proportions, refinement limits         | —           |
+| complex numbers | a size and an angle              | the circular view (see below)          | from memory |
+| quaternions     | 4 parts; rotations in 3D         | —                                      | from memory |
+| octonions       | 8 parts                          | —                                      | from memory |
+
+- complex numbers aren't just a pair: they still multiply and divide like
+  numbers, and multiplying by one rotates and scales
+- Hurwitz's theorem: real numbers, complex numbers, quaternions and octonions
+  are the only normed division algebras
+- geometric (Clifford) algebra contains complex numbers and quaternions as
+  special cases (Hestenes)
+- other directions: **dual numbers** (a value and its rate of change; used for
+  automatic differentiation), **split-complex numbers** (hyperbolic rotations,
+  relativity), **p-adic numbers** (closeness measured by divisibility; maybe
+  relevant to the prime module), **values between 0 and 1** (probabilities,
+  fuzzy logic: a cell partly filled)
+
+### complex analysis of spacers
+
+- **cells as roots of unity** (derived): cell j of an n-cell circle can be
+  written as the complex number e^(2πij/n). rotating a spacer by k cells is
+  multiplying by e^(2πik/n), so the circular view's wrap-around arithmetic is
+  that multiplication
+- **the discrete Fourier transform** of a spacer adds up its points as roots of
+  unity. Amiot reads maximally even sets through their Fourier coefficients
+  (verified; see the spacer timeline above)
+- **weights and spectra**: family weights are autocorrelation, and the Fourier
+  transform of an autocorrelation is a power spectrum (Wiener–Khinchin; see
+  "from discrete to continuous" above)
+- **to look into**: the spectra of weights for patterned versus arbitrary
+  spacers; complex-valued cells (an amount and an angle) as objects in their
+  own right; what layers and stacks look like in Fourier terms
+
+### symbols that carry several values
+
+- **Bertin, _Semiology of Graphics_** (1967): the visual variables a mark can
+  carry (position, size, shape, lightness, colour, orientation, texture), each
+  able to carry one dimension. the doc's display form already uses two: fill
+  for the state, and shape, size or orientation for the reading
+- **heights in one character**: the Unicode eighth blocks ▁▂▃▄▅▆▇█, as in
+  Tufte's sparklines. computed 2026-10-22: weights `2 2 0 1 0 3 1 0` become
+  `▅▅ ▃ █▃ `
+- **a whole spacer in one character**: a braille character is a 2×4 grid of
+  dots (256 patterns, U+2800–U+28FF). computed 2026-10-22: with cells 0–3 down
+  the left column and 4–7 down the right, `xx...x..` becomes `⠓`. it needs a
+  fixed cell order, since braille's own dot numbering isn't in reading order.
+  text-mode plotting tools draw with braille this way
+- **an angle in one mark**: an arrow (only 8 directions in text) or a colour's
+  hue, which is itself a circle. showing complex values with hue for the angle
+  and brightness for the size is called **domain colouring**
+- so a complex-valued cell could be a single coloured glyph: hue for the angle,
+  size or brightness for the amount
+
 ## reading list
 
 suggested order:
@@ -706,3 +775,8 @@ background:
 - "automatic sequences" / "substitution" + "diffraction" / "spectral measure"
 - "generalized harmonic analysis" Wiener / "autocorrelation" infinite sequence
 - "Stern–Brocot" / "Minkowski question mark function"
+- "roots of unity" + rhythm / necklace / "pitch-class set"
+- "discrete Fourier transform" + rhythms / "maximally even"
+- "hypercomplex numbers" / "normed division algebra" / "geometric algebra"
+- "visual variables" Bertin / "domain coloring" / "sparklines"
+- braille + "text-mode" plotting
