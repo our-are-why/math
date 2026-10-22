@@ -38,8 +38,12 @@ what changes is which cells are neighbours, and what a cell's position means.
 - **linear**: the first and last cells are the ends. a position is an amount:
   how far from the start. between two cells there is one distance
 
-the two views are connected: cut the circle between two neighbouring cells and
-it becomes a line; join a line's two ends and it becomes a circle again.
+a reading can also be left open: such a spacer is **fluid**, and can be read
+either way later. once a spacer is read circular or linear, though, that
+becomes part of what it is: it doesn't go back to fluid, or switch to the
+other reading, on its own. turning one into the other takes an operation (see
+"operations"): unwinding a circle from its cell 0 gives a line, and closing a
+line, so its ends join, gives a circle.
 
 ## filled and empty
 
@@ -86,7 +90,7 @@ the views differ at the ends:
   cell 0 is the last cell; one step + from the last cell is cell 0
 - **linear**: the ends stop you. there's no step − from the first cell, and no
   step + from the last
-- **neutral**: stepping works between the ends; what happens past them is
+- **fluid**: stepping works between the ends; what happens past them is
   left open until a view is chosen
 
 as far as a linear spacer is concerned, nothing exists beyond its ends: it's
@@ -266,7 +270,7 @@ in the typed form, the edges around a spacer say how it's read:
     <xx...x..>    linear        bounded: an end on each side, and nothing beyond
     [xx...x..]    scoped        a piece of a larger spacer: it has ends, but
                                 there's more beyond them
-    |xx...x..|    neutral       plain walls: just the spacer, no view chosen
+    |xx...x..|    fluid         plain walls: just the spacer, no reading chosen
 
 **zero** is `|><|`: the walls pushed together, with no space left between them.
 it only takes the plain walls, since with no cells there's nothing to read as a
@@ -291,7 +295,7 @@ and empty always differ twice: in fill, and in size, direction or turn:
     |><|          |▶◀|                    zero
 
 a single ● can't be mistaken for anything else, so the shapes do the job the
-edges do in the typed form. the figures before this section use the neutral
+edges do in the typed form. the figures before this section use the fluid
 shapes: no view chosen yet. where no cells are drawn (in points, labels and scopes,
 below), the edges stay, with → and − in place of -> and -. square brackets
 around cells get a space inside them, like the cells do: `[ ▲ ▽ ▲ ]`. ranges
@@ -331,8 +335,10 @@ a spacer can be given a name, a **label**, to refer to it later:
 `:=` means "is defined as", which keeps `=` free for saying two things are the
 same. labels start with an uppercase letter and are never `X`, so they can't be
 mistaken for cells; words work too, like `Primes` or `S1`. inside edges, a
-label stands for its cells: `)S(` is S read circularly. like the point form,
-it can carry its resolution: `)6: S(`.
+label stands for its cells: `)S(` is S read circularly. a reading can only be
+applied to a fluid label: if S is already circular, `)S(` just repeats its
+reading, and `<S>` isn't allowed. like the point form, a label can carry its
+resolution: `)6: S(`.
 
 ### descriptions
 
@@ -389,7 +395,7 @@ how a scope behaves depends on both:
   times, then 5 more steps: 23 steps in all, or `[2->25]` as an absolute range.
   `%` is the programmer's wrap-around (modulo), so read `3%` as "3 laps", not
   "3 percent"
-- **neutral**: in `|6: S|[…]`, what lies past the ends is undecided, so a
+- **fluid**: in `|6: S|[…]`, what lies past the ends is undecided, so a
   scope has to stay within them
 - **the result** is a scoped piece, `[…]`, with its own numbering: its cell 0
   is where the scope started, and its + runs the way the scope walked
@@ -600,12 +606,12 @@ and it needs a few things settled:
 
       )(x.., .x.)(      circular
       <(x.., .x.)>      linear
-      |(x.., .x.)|      neutral
+      |(x.., .x.)|      fluid
       )(A, B)(          labels too: reads both A and B circularly
 
   edges around anything apply a reading to it, the way `)S(` reads S
-  circularly, so the members inside are written bare. for now, a stack can't
-  mix readings
+  circularly, as long as what's inside is fluid or already reads that way.
+  so the members inside are written bare. for now, a stack can't mix readings
 
 framing is where identity gets decided: a stack takes each spacer exactly as
 framed, so `)x.x..(` and `)x..x.(` add to different columns, although read
@@ -625,9 +631,9 @@ circularly one is the other started from a different cell.
 - the weights live in a space of their own: the same cells and reading as the
   stack, but each cell holds an amount instead of one of two states, so a row
   of weights isn't a spacer. the reading carries through: circular members give
-  circular weights, linear members linear ones, and neutral members leave the
+  circular weights, linear members linear ones, and fluid members leave the
   reading open, to be chosen by the use. writing the members circular or linear
-  says the reading is part of the structure; writing them neutral says it's a
+  says the reading is part of the structure; writing them fluid says it's a
   perspective for later
 - the weights add up to the members' densities together (9 here), and no
   weight is more than the number of members
@@ -658,7 +664,7 @@ stack: cell weights per cell, and a spacer weight per member.)
 
 two spacers with the same resolution can be combined cell by cell into a new
 spacer. like stacking, this frames both spacers, as written by default, and the
-same reading rules apply: both circular, both linear or both neutral, and the
+same reading rules apply: both circular, both linear or both fluid, and the
 result takes their reading.
 
     A              ■ ■ ◇ ◇ ◇ ■ ◇ ◇
@@ -692,8 +698,15 @@ operation works on spacers as written, by default.
 
 what's allowed depends on the readings going in, by the same idea as stacks:
 writing a spacer circular or linear says its reading is part of its structure;
-writing it neutral leaves the reading open, so it can take whichever part the
+writing it fluid leaves the reading open, so it can take whichever part the
 operation needs.
+
+an operation may borrow a reading while it works, but **fluid in gives
+fluid out**: committing to a reading is left to whoever uses the result. a
+fluid spacer can be rotated as a circle and then read as a line: with
+`N := |xx...x..|`, `Rotate(N, 5)` is `|x..xx...|`, and `<Rotate(N, 5)>` is
+`<x..xx...>`. the only exceptions are the operations whose job is to change
+a reading: unwind and close.
 
 ### rotate
 
@@ -706,7 +719,7 @@ cell 0.
     Rotate(S, -2)      →  )..xx...x(
 
 - **circular**: yes. this is the rotating described in "writing a spacer down"
-- **neutral**: yes, read circularly for the move; the result stays neutral
+- **fluid**: yes, read circularly for the move; the result stays fluid
 - **linear**: no. a line's ends are part of its structure, and rotating would
   carry cells across them; see shift
 
@@ -721,7 +734,7 @@ beyond a line's ends, and empty cells come in at the other end.
     Shift(S, -2)       →  <..xx...x>       two empty cells come in at the start
 
 - **linear**: yes
-- **neutral**: yes, read linearly for the move; the result stays neutral
+- **fluid**: yes, read linearly for the move; the result stays fluid
 - **circular**: no; rotate instead
 - sliding a scoped piece along its parent brings in real cells from beyond,
   not empty ones. that's a change of the scope's range, not a shift
@@ -737,7 +750,7 @@ depends on the reading:
 - **linear**: the ends swap: `<xx...x..>` becomes `<..x...xx>`
 - **circular**: cell 0 stays where it is, and the other cells come round the
   other way: `)xx...x..(` becomes `)x..x...x(`
-- **neutral**: as written, end to end, like linear
+- **fluid**: as written, end to end, like linear
 
 the two results differ only in where they start: the circular one is the
 end-to-end one, started one cell earlier.
@@ -753,14 +766,14 @@ cells go in as one block, and the result takes the host's reading.
 
 only something with ends can be put into something else:
 
-| what goes in ↓, host → | linear | circular | neutral |
-| ---------------------- | ------ | -------- | ------- |
-| **linear**             | yes    | yes      | yes     |
-| **neutral**            | yes    | yes      | yes     |
-| **circular**           | no     | no       | no      |
+| what goes in ↓, host → | linear | circular | fluid |
+| ---------------------- | ------ | -------- | ----- |
+| **linear**             | yes    | yes      | yes   |
+| **fluid**              | yes    | yes      | yes   |
+| **circular**           | no     | no       | no    |
 
 a spacer written circular says it has no ends, so there's nothing to attach. if
-its circularity is only a perspective, it can be written neutral, and then it
+its circularity is only a perspective, it can be written fluid, and then it
 can go in.
 
 - a linear host with n cells has n + 1 places to insert: before each cell, and
@@ -781,21 +794,34 @@ reading: a circle repeated is a circle that goes round the pattern m times.
 this builds a new, longer spacer. `~` is different: it says a spacer repeats in
 its surroundings, and leaves the spacer as it is.
 
-### unwinding
+### unwind and close
 
-a circle can be unwound into a line, lap after lap, in two ways:
+these two change a committed reading, so they're the only operations that turn
+a circle into a line, or a line into a circle.
 
-- **a set number of laps**: repeat it, then read the result as a line.
-  `<S^3>` unwinds `S := )x..(` three times round: `<x..x..x..>`. a circular
-  scope with laps does the same as a walk: `)3: S([0~2%+2]` gives the same 9
-  cells
-- **over time**: a generator that unwinds one more cell at each resolution,
-  where cell j copies S's cell j, counting round S as many times as needed.
-  earlier cells never change, so it grows: `|x|` → `|x.|` → `|x..|` →
-  `|x..x|` → …, and without end it reaches S repeating: `)x..(~`
+`Unwind(S, m)` opens a circle into a line m laps long, starting from its
+frame's cell 0. `Close(S)` joins a line's two ends into a circle.
 
-unwinding starts where the spacer's frame starts, its cell 0 as written;
-starting somewhere else means rotating first.
+    S := )x..(
+    Unwind(S, 1)       →  <x..>           one lap: the same cells, now as a line
+    Unwind(S, 3)       →  <x..x..x..>     three laps
+    Close(<x..>)       →  )x..(           the ends join
+
+- the round trip loses nothing: closing an unwound lap gives the circle back,
+  and unwinding a closed line gives the line back, since both start at cell 0
+- unwind takes a circle, or a fluid spacer read as one; close takes a line,
+  or a fluid spacer read as one. a fluid spacer doesn't need them to be
+  read either way, though: `<N^3>`, with `N := |x..|`, already reads three
+  copies as a line
+- unwinding starts where the spacer's frame starts, its cell 0 as written;
+  starting somewhere else means rotating first
+- a circular scope with laps walks the same cells: `)3: S([0~2%+2]` gives
+  `[x..x..x..]`, a scoped piece
+
+unwinding can also happen over time: a generator that unwinds one more cell at
+each resolution, where cell j copies S's cell j, counting round S as many times
+as needed. earlier cells never change, so it grows: `|x|` → `|x.|` → `|x..|` →
+`|x..x|` → …, and without end it reaches S repeating: `)x..(~`.
 
 ## going to infinity
 
@@ -912,19 +938,65 @@ being spaced and the space between them, isn't one.
 
 ## identity
 
-when two spacers count as the same (identity), or as alike (equivalence), is
-left open here on purpose. the right answer depends on the use, so it's best
-decided as late as possible, by whoever is working with spacers, in the way
-that fits what they're doing.
+this doc gives identity a **default**: a starting point that any use can
+override, tightening or loosening it to fit what it's doing.
 
-one thing holds whatever is decided: how a spacer is written never makes it a
-different spacer. typed or display, cells or points, or any other symbols that
-follow the rules all write the same thing.
+**by default, two spacers are the same spacer when they have:**
 
-when identity or equivalence does get decided, it helps to say what's being
-compared and what's being set aside: the resolution, the density, the
-arrangement, the reading, the start and direction, or where a spacer came
-from.
+- the same resolution
+- the same reading: both fluid, both circular, or both linear
+- the same state in every numbered cell
+
+different encodings never make different spacers: typed or display symbols,
+cells or points, or any other symbols that follow the rules. what the encoding
+says does matter: the resolution, the reading and the cells. where a spacer
+came from isn't part of the default, but a use can add it.
+
+so by default, `|8: 0,1,5|` is the same spacer as `|xx...x..|`. but `)x.x..(`
+and `)x..x.(` are different (one is the other rotated), and so are `|x..|` and
+`<x..>` (one is fluid, the other committed to linear).
+
+comparing cell by cell includes the conventions, cell 0 and the direction. that
+doesn't make them essence (see "essence and convention"): the default is simply
+the strictest comparison, so it never merges two spacers that a use might need
+to keep apart.
+
+a fluid spacer **fits** a circular or linear spacer with the same resolution and
+cells: it could become it, just by committing to a reading. fitting isn't
+identity, and it runs one way only, from the open reading to a committed one:
+`|x..|` fits both `)x..(` and `<x..>`, but those two are still different
+spacers. between them, unwind and close convert either way, losing nothing.
+
+that gives four ways of comparing:
+
+| comparison                 | means                                                     | typed | display |
+| -------------------------- | --------------------------------------------------------- | ----- | ------- |
+| **identical**              | the same resolution, reading and cells (the default)      | `=`   | `=`     |
+| **fits**                   | a commitment away: one fluid, the other committed         | `~=`  | `≃`     |
+| **converts**               | a conversion away: one circle, one line, the same cells   | `<->` | `⇄`     |
+| **the same up to reading** | any of the three above                                    | `==`  | `≈`     |
+
+    |x..| ~= )x..(        fits
+    )x..( <-> <x..>       converts
+    |x..| == <x..>        the same up to reading: here, because it fits
+    )x..( == <x..>        the same up to reading: here, because it converts
+
+`==` is whichever of `=`, `~=` and `<->` applies. `=` and `==` chain: if A is
+the same as B, and B as C, then A is the same as C. `~=` and `<->` don't: two
+fittings from the same fluid spacer give a conversion, and two conversions come
+back to the same reading, which is identity. `<->` needs spaces around it, so it's never read as edges.
+
+**overriding the default.** a use can loosen it by setting something aside, or
+tighten it by adding something. the usual loosenings have exact forms through
+the operations:
+
+- **up to start**: the same when one is a rotation of the other
+- **up to direction**: the same when one is a reversal of the other
+- **up to reading**: `==`, the same cells whatever the reading
+
+tightening adds what the default leaves out, like where a spacer came from, or
+its frame in a stack. a use that overrides the default should say what it
+compares and what it sets aside.
 
 ## a note on "cell"
 
