@@ -14,9 +14,12 @@ the picture runs left to right, but that's only one way to draw it: a spacer
 isn't horizontal, or in time, or laid out in any particular way.
 
 a spacer is one kind of discrete space: one dimension, with each cell in one of
-two states. spaces can have more dimensions, and their cells can hold other
-kinds of values. those are other paths to explore, noted here and not followed
-yet; one comes up with weights.
+two states. everything in this doc is worked out for one dimension, where much
+of it is close to self-evident. spaces can have more dimensions, and their cells
+can hold other kinds of values. but in more dimensions, things like neighbours,
+distance and "the next point" stop being obvious, and many ideas here may
+change shape. those paths are noted and deliberately left for later. one other
+kind of value comes up with weights.
 
 ## circular and linear
 
@@ -613,6 +616,34 @@ linear ones give linear weights. a stack of neutral spacers leaves the reading
 open, so its weights can be read however the use needs. writing the members
 circular or linear says the reading is part of the structure; writing them
 neutral says it's a perspective for later. for now, a stack can't mix readings.
+
+## combining spacers
+
+two spacers with the same resolution can be combined cell by cell into a new
+spacer. like stacking, this lines their cells up by number, as written, and the
+same reading rules apply: both circular, both linear or both neutral, and the
+result takes their reading.
+
+    A              ■ ■ ◇ ◇ ◇ ■ ◇ ◇
+    B              ■ ◇ ◇ ■ ◇ ■ ◇ ◇
+    A and B        ■ ◇ ◇ ◇ ◇ ■ ◇ ◇      filled where both are
+    A or B         ■ ■ ◇ ■ ◇ ■ ◇ ◇      filled where at least one is
+    A xor B        ◇ ■ ◇ ■ ◇ ◇ ◇ ◇      filled where exactly one is
+    A but not B    ◇ ■ ◇ ◇ ◇ ◇ ◇ ◇      filled where A is and B isn't
+
+the negative is the same idea for one spacer: `not A` is filled wherever A
+isn't.
+
+these are the familiar operations of logic, and of sets read on the points:
+`and` is intersection, `or` is union, `xor` is symmetric difference, `but not`
+is difference and `not` is the complement. the typed form writes them as words
+between the spacers; the display form can use the set symbols: `A ∩ B`,
+`A ∪ B`, `A △ B`, `A ∖ B`.
+
+they're also thresholds on weights: stack A and B, and `A and B` is where the
+weight is 2, `A or B` where it's at least 1, and `A xor B` where it's exactly 1.
+with more spacers in a stack, any threshold works the same way, such as "at
+least half of them".
 
 ## going to infinity
 

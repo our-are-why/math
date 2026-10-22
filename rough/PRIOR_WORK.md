@@ -736,6 +736,26 @@ citing.
 - so a complex-valued cell could be a single coloured glyph: hue for the angle,
   size or brightness for the amount
 
+### more dimensions
+
+noted 2026-10-22: everything in `documentation/spacer.md` is worked out for one
+dimension, and more dimensions are deferred on purpose. the semantics of several
+dimensions (neighbours, distance, "the next point", operations, analysis) were
+never pinned down. starting points, _from memory_:
+
+- **reading a grid in one dimension**: row by row is simple, but splits
+  neighbours apart; following a space-filling curve (Hilbert's, for example)
+  keeps neighbours mostly together
+- **discrete vectors**: integer steps on a grid, the subject of digital
+  geometry; in a grid, which cells count as neighbours is a choice (4 or 8 in
+  2D: the von Neumann and Moore neighbourhoods of cellular automata)
+- **two dimensions read in one**: a straight line drawn across a 2D grid, read
+  as the sequence of grid lines it crosses (a cutting sequence), gives an
+  evenly spread spacer, so the sessions' main object is a two-dimensional idea
+  read in one dimension (see "continuous perspective" above)
+- **shapes of 2D spaces**: each dimension circular or linear gives a flat grid,
+  a cylinder or a torus
+
 ## reading list
 
 suggested order:
