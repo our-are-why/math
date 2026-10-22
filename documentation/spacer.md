@@ -559,14 +559,59 @@ a different kind of nesting, noted here as a concept only: each cell of a
 spacer opens into a spacer of its own, the way a tile can be divided into
 smaller tiles. it's close to refinement, and it's left for later.
 
-## sets, stacks and weights
+## collections, stacks and weights
 
-a **set** groups spacers together, each at most once, in no order: `{A, B, C}`.
-a description is a set too: `{r: 8, d: 3}` is every spacer that fits.
+### collections
 
-a **stack** lines spacers of the same resolution up cell by cell, in the order
-they're put on: `(A, B, C)`. a stack can hold the same spacer more than once,
-and each copy counts.
+a **collection** is several spacers taken together. two things about a
+collection are independent of each other:
+
+- **order**: whether its members come in a set order
+- **repeats**: whether the same spacer can appear more than once
+
+each combination has an established name:
+
+|               | no repeats             | repeats allowed            |
+| ------------- | ---------------------- | -------------------------- |
+| **unordered** | set: `{A, B, C}`       | multiset: `{#A, A, B#}`    |
+| **ordered**   | ordered set            | sequence: `(A, A, B)`      |
+
+an ordered set is written like a sequence whose members all differ. the display
+form can write a multiset with bag brackets: `⟅A, A, B⟆`.
+
+what counts as a repeat depends on what counts as the same spacer, so, like
+identity, whether a collection has repeats is decided by the use. a description
+picks out spacers too, and what it gives can be any of these kinds:
+`{r: 8, d: 3}` gives every fitting spacer once, but other descriptions can give
+repeats, or an order.
+
+### stacks
+
+to count across a collection, its spacers are **stacked**: lined up cell by
+cell. stacking is a device for working with spacers, not a new kind of spacer,
+and it needs a few things settled:
+
+- every member has the same resolution
+- each member sits in a **frame**: the fixed choices that say how it lines up,
+  meaning which of its cells is cell 0, which way it runs, and how it's read.
+  by default, a spacer is framed as written, with its cell 0 over the stack's
+  cell 0
+- all members share one reading, and the edges around a stack say which:
+
+      )(x.., .x.)(      circular
+      <(x.., .x.)>      linear
+      |(x.., .x.)|      neutral
+      )(A, B)(          labels too: reads both A and B circularly
+
+  edges around anything apply a reading to it, the way `)S(` reads S
+  circularly, so the members inside are written bare. for now, a stack can't
+  mix readings
+
+framing is where identity gets decided: a stack takes each spacer exactly as
+framed, so `)x.x..(` and `)x..x.(` add to different columns, although read
+circularly one is the other started from a different cell.
+
+### weights
 
     cell      0 1 2 3 4 5 6 7
     A         ■ ■ ◇ ◇ ◇ ■ ◇ ◇
@@ -575,19 +620,22 @@ and each copy counts.
               ---------------
     weights   2 2 0 1 0 3 1 0
 
-- the **cell weights** count the filled cells in each column. they don't depend
-  on the order, so a set of spacers with the same resolution gives the same
-  weights as a stack: `{A, B, C}` and `(A, B, C)` agree here
+- the **cell weights** count the filled cells in each column. they ignore order
+  and count every repeat
 - the weights live in a space of their own: the same cells and reading as the
-  stack, but each cell holds an amount instead of one of two states. so a row
-  of weights isn't a spacer
+  stack, but each cell holds an amount instead of one of two states, so a row
+  of weights isn't a spacer. the reading carries through: circular members give
+  circular weights, linear members linear ones, and neutral members leave the
+  reading open, to be chosen by the use. writing the members circular or linear
+  says the reading is part of the structure; writing them neutral says it's a
+  perspective for later
 - the weights add up to the members' densities together (9 here), and no
   weight is more than the number of members
-- a member's **score** is the weights added up at its points: how much it
-  agrees with the whole, itself included. A scores 2 + 2 + 3 = 7; B and C
-  score 6 each
-- a stack's **build-up** is its running weights as each member goes on.
-  unlike the final weights, it depends on the order:
+- a member's **spacer weight** (or score) is the weights added up at its
+  points: how much it agrees with the whole, itself included. A's is
+  2 + 2 + 3 = 7; B's and C's are 6
+- an ordered stack has a **build-up**: its running weights as each member goes
+  on. unlike the final weights, it depends on the order:
 
       after A    1 1 0 0 0 1 0 0
       after B    2 1 0 1 0 2 0 0
@@ -603,24 +651,13 @@ weights are written as a row of numbers, which are amounts, not states (rule
 4): `|2 2 0 1 0 3 1 0|`.
 
 ("weight" has another meaning in coding theory, where a string's weight is its
-number of 1s; here, that's density. cell weights are always per cell, across a
-set or stack.)
-
-stacking lines cells up by their numbers, so it takes each spacer exactly as
-written: `)x.x..(` and `)x..x.(` add to different columns, although read
-circularly one is the other started from a different cell. combining spacers
-is one of the places where identity gets decided.
-
-the reading carries through: circular spacers give circular weights, and
-linear ones give linear weights. a stack of neutral spacers leaves the reading
-open, so its weights can be read however the use needs. writing the members
-circular or linear says the reading is part of the structure; writing them
-neutral says it's a perspective for later. for now, a stack can't mix readings.
+number of 1s; here, that's density. here, weights are always taken across a
+stack: cell weights per cell, and a spacer weight per member.)
 
 ## combining spacers
 
 two spacers with the same resolution can be combined cell by cell into a new
-spacer. like stacking, this lines their cells up by number, as written, and the
+spacer. like stacking, this frames both spacers, as written by default, and the
 same reading rules apply: both circular, both linear or both neutral, and the
 result takes their reading.
 
@@ -644,6 +681,121 @@ they're also thresholds on weights: stack A and B, and `A and B` is where the
 weight is 2, `A or B` where it's at least 1, and `A xor B` where it's exactly 1.
 with more spacers in a stack, any threshold works the same way, such as "at
 least half of them".
+
+## operations
+
+an **operation** takes spacers and gives back a spacer. two are already here:
+the negative (`not A`) and combining (`A and B` and the rest). the others are
+written as functions, the way generators take their values: the operation's
+name, then its values in round brackets, in a stated order. like stacking, an
+operation works on spacers as written, by default.
+
+what's allowed depends on the readings going in, by the same idea as stacks:
+writing a spacer circular or linear says its reading is part of its structure;
+writing it neutral leaves the reading open, so it can take whichever part the
+operation needs.
+
+### rotate
+
+`Rotate(S, k)`, a **rotation/phase**, starts S from its cell k: the cells come
+round in the same order, and cell k becomes cell 0. k can be negative: −2 is two cells back from
+cell 0.
+
+    S := )xx...x..(
+    Rotate(S, 5)       →  )x..xx...(
+    Rotate(S, -2)      →  )..xx...x(
+
+- **circular**: yes. this is the rotating described in "writing a spacer down"
+- **neutral**: yes, read circularly for the move; the result stays neutral
+- **linear**: no. a line's ends are part of its structure, and rotating would
+  carry cells across them; see shift
+
+### shift
+
+`Shift(S, k)` is the closest a line has to rotating. like `Rotate`, it starts S
+from its cell k, but cells carried past an end fall off, since nothing lies
+beyond a line's ends, and empty cells come in at the other end.
+
+    S := <xx...x..>
+    Shift(S, 2)        →  <...x....>       the two cells before cell 2 fall off
+    Shift(S, -2)       →  <..xx...x>       two empty cells come in at the start
+
+- **linear**: yes
+- **neutral**: yes, read linearly for the move; the result stays neutral
+- **circular**: no; rotate instead
+- sliding a scoped piece along its parent brings in real cells from beyond,
+  not empty ones. that's a change of the scope's range, not a shift
+
+shift is offered tentatively: a line has no natural way round, and dropping
+cells may not suit every use.
+
+### reverse
+
+`Reverse(S)` runs the numbering the other way. which cell ends up as cell 0
+depends on the reading:
+
+- **linear**: the ends swap: `<xx...x..>` becomes `<..x...xx>`
+- **circular**: cell 0 stays where it is, and the other cells come round the
+  other way: `)xx...x..(` becomes `)x..x...x(`
+- **neutral**: as written, end to end, like linear
+
+the two results differ only in where they start: the circular one is the
+end-to-end one, started one cell earlier.
+
+### insert and join
+
+`Insert(H, k, G)` puts a spacer G into a host H, just before H's cell k. G's
+cells go in as one block, and the result takes the host's reading.
+
+    H := )xx..(
+    G := <x.>
+    Insert(H, 2, G)    →  )xxx...(
+
+only something with ends can be put into something else:
+
+| what goes in ↓, host → | linear | circular | neutral |
+| ---------------------- | ------ | -------- | ------- |
+| **linear**             | yes    | yes      | yes     |
+| **neutral**            | yes    | yes      | yes     |
+| **circular**           | no     | no       | no      |
+
+a spacer written circular says it has no ends, so there's nothing to attach. if
+its circularity is only a perspective, it can be written neutral, and then it
+can go in.
+
+- a linear host with n cells has n + 1 places to insert: before each cell, and
+  after the last (k from 0 to n)
+- a circular host has n: the gaps between neighbours (k from 1 to n). before
+  cell 0 and after the last cell are the same gap, written as k = n, and the
+  host keeps its cell 0
+- **join** is inserting at the end: `Join(A, B)` puts B after A's last cell.
+  `<x.>` joined with `<.xx>` gives `<x..xx>`
+
+### repeat
+
+`Repeat(S, m)` builds the spacer that is S written m times in a row:
+`Repeat(|x..|, 3)` is `|x..x..x..|`. the study of strings writes this as a
+power, and here `S^3` is shorthand for `Repeat(S, 3)`. the result keeps S's
+reading: a circle repeated is a circle that goes round the pattern m times.
+
+this builds a new, longer spacer. `~` is different: it says a spacer repeats in
+its surroundings, and leaves the spacer as it is.
+
+### unwinding
+
+a circle can be unwound into a line, lap after lap, in two ways:
+
+- **a set number of laps**: repeat it, then read the result as a line.
+  `<S^3>` unwinds `S := )x..(` three times round: `<x..x..x..>`. a circular
+  scope with laps does the same as a walk: `)3: S([0~2%+2]` gives the same 9
+  cells
+- **over time**: a generator that unwinds one more cell at each resolution,
+  where cell j copies S's cell j, counting round S as many times as needed.
+  earlier cells never change, so it grows: `|x|` → `|x.|` → `|x..|` →
+  `|x..x|` → …, and without end it reaches S repeating: `)x..(~`
+
+unwinding starts where the spacer's frame starts, its cell 0 as written;
+starting somewhere else means rotating first.
 
 ## going to infinity
 
