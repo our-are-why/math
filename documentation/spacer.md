@@ -432,14 +432,15 @@ a piece of a piece follows a few rules:
    as the end stays inside the piece, and `-` for walking the other way
 
 **back to the root.** because each piece stays inside its parent, any piece of
-a piece is one unbroken stretch of the spacer the chain was first taken from,
-its **root**. if that spacer is itself a layer (see "layers"), the chain stops
-there, in the layer's numbering. to find where a piece sits in its root, go up
-one level at a time: add the parent's start to the piece's start. if the parent
-walked −, subtract instead, and flip the direction. you can stop at any level
-on the way up. a start can come out below 0, which can only happen in a
-circular root: at resolution 8, −2 and 6 name the same cell, but −2 keeps how
-it was reached. either can be written.
+a piece is one unbroken stretch of the spacer the chain was first taken from.
+usually that's the **root**: the spacer at the very top, which isn't a piece or
+a layer of anything. if it's a layer (see "layers"), the layer is the first
+piece's parent, and the chain can't look past it. to find where a piece sits,
+go up one parent at a time: add the parent's start to the piece's start. if the
+parent walked −, subtract instead, and flip the direction. you can stop at any
+parent on the way up. a start can come out below 0, which can only happen when
+the chain starts in a circle: at resolution 8, −2 and 6 name the same cell, but
+−2 keeps how it was reached. either can be written.
 
     B starts at A's cell 2, and A starts at S's cell 5:   5 + 2 = 7
     B in S:   )8: S([7+2]  =  )8: S([7->9]          →  [.xx]
@@ -448,8 +449,9 @@ it was reached. either can be written.
     D := [5: C][1->3]      →  [x..]        C's cells 1, 2, 3
     D in S: C walked −, so 1 − 1 = 0, going −:   )8: S(-[0+2]   →  [x..]
 
-the chain records how a piece was made; the root form records where it ends
-up. they always agree.
+the chain records how a piece was made; written as a scope of the root, it
+records where it ends up. both show the same cells, but they're mounted on
+different parents (see lift and collapse, in "operations").
 
 ### inside other formats
 
@@ -527,16 +529,17 @@ further layer, and so on.
   no cells, which is zero. so a cascade stops at its first all-empty layer
 - **flattening**: the deepest layer's choices can be shown on the root's
   cells: here, `|x....x..|`. the flattened spacer doesn't show it was chosen in
-  steps; like any origin, the cascade lives outside the cells
+  steps; like any origin, the cascade lives outside the cells (see press and
+  flatten, in "operations")
 
 layers aren't scopes. a scope takes a stretch of neighbouring cells; a layer
 chooses among points, skipping the cells in between. both nest and both chain,
 and they can be mixed: a scope of a layer is a stretch of consecutive points.
 
-a scope of a layer stays in the layer's context: going back up through scopes
-stops at the layer. placing it on the cascade's root means following the layers
-up, which is flattening, not scoping, and a stretch of consecutive points in a
-layer can be scattered across the root: in `|xx...x..| >> |x.x|`, the layer's
+a scope of a layer has the layer as its parent, and can't look past it.
+placing it on the cascade's root means following the layers up, which is
+flattening, not scoping, and a stretch of consecutive points in a layer can be
+scattered across the root: in `|xx...x..| >> |x.x|`, the layer's
 cells 1 and 2 are the root's cells 1 and 5.
 
 ### writing layers
@@ -715,12 +718,12 @@ stack from "collections, stacks and weights", that's `|...x.xx.|`, while
 an **operation** takes spacers and gives back a spacer. they come in two kinds:
 
 - **primitives**, which each do one basic thing: commit, rotate, slide,
-  reverse, mirror, join, unwind, wind, detach, flatten and threshold, along
+  reverse, mirror, join, unwind, wind, detach, lift, press and threshold, along
   with taking a scope, layering (`>>`), and the cell-by-cell `not`, `and` and
   `or` from "combining spacers"
 - **named composites**, which are made of primitives and named because they're
-  useful: repeat, insert, splice, `but not`, `xor`, at most, exactly, levels
-  and depths. each is defined by the
+  useful: repeat, insert, splice, collapse, flatten, `but not`, `xor`, at most,
+  exactly, levels and depths. each is defined by the
   primitives it's made of, so composites can be added or dropped without
   touching anything else
 
@@ -733,9 +736,9 @@ what went in stays as it was.
 
 most operations work on a spacer's cells. a few work on a view instead: they
 change how a spacer is looked at, not the spacer itself. taking a scope,
-sliding it and committing a fluid spacer to a reading are of this kind. detach
-and flatten are the bridges from a view, or a cascade, back to a spacer of its
-own.
+sliding it, lifting it and committing a fluid spacer to a reading are of this
+kind. detach and flatten are the bridges from a view, or a cascade, back to a
+spacer of its own.
 
 what's allowed depends on the readings going in, by the same idea as stacks:
 writing a spacer circular or linear says its reading is part of its structure;
@@ -826,7 +829,8 @@ part the window shows changes.
   only make sense if the parent were circular, and the window stays tied to its
   parent afterwards, so the parent's reading has to be committed first: `)S(`
   to wrap round, `<S>` to stay bounded
-- a scope of a scope slides within its immediate parent
+- a scope of a scope slides within its immediate parent. lifting it first lets
+  it slide within the parent above (see lift)
 - it undoes cleanly: `Slide(Slide(A, 2), -2)` is A again, as long as each slide
   was allowed
 
@@ -928,17 +932,41 @@ their own: the window's edges become free ends.
 - it's what lets a piece be used on its own: joined, or studied as a spacer in
   its own right
 
-#### flatten
+#### lift
 
-`Flatten(R >> L)` shows a cascade's deepest choices on its root's cells, as one
-spacer:
+`Lift(B)` takes one step up a chain of scopes: it gives B as a scope of its
+parent's parent, by the rule in "back to the root".
 
-    Flatten(|xx...x..| >> |x.x|)    →  |x....x..|
+    S := )xx...x..(
+    A := )8: S([5+4]       →  [x..xx]       S's cells 5, 6, 7, 0, 1
+    B := [5: A][2->4]      →  [.xx]         A's cells 2, 3, 4
+    Lift(B)                →  [.xx]         )8: S([7+2]: S's cells 7, 0, 1
 
-- the result has the root's resolution and reading
-- flattening forgets the layers, the way detach forgets a context: the
-  flattened spacer doesn't show that it was chosen in steps (see "layers")
-- there's no way back: many cascades flatten to the same spacer
+- the cells it shows stay the same; what changes is the parent it's mounted
+  on. a parent's ends are where a scope has to stop, and the parent above
+  always contains the one below, so a lifted piece has at least as much room:
+  `Slide(B, 1)` isn't allowed, since it would run past A's end, but
+  `Slide(Lift(B), 1)` is `[xx.]`, S's cells 0, 1, 2
+- it isn't allowed when the parent is a root or a layer: there's nothing above
+  it that a scope can reach
+- it forgets the parent it skipped, so there's no way back: many chains lift
+  to the same scope
+
+#### press
+
+`Press(K)` takes one step up a cascade: it presses the deepest layer onto the
+layer above, so the cascade has one layer fewer. the pressed layer keeps the
+upper layer's resolution, and shows the deepest choices on its cells.
+
+    K := |xx...x.x| >> |x.xx| >> |.xx|
+    Press(K)               →  |xx...x.x| >> |..xx|
+    Press(Press(K))        →  |.....x.x|
+
+- a root with one layer presses to a single spacer, with the root's
+  resolution and reading
+- it forgets one layer, the way lift forgets one parent: the result doesn't
+  show that it was chosen in two steps
+- there's no way back: many cascades press to the same one
 
 #### threshold
 
@@ -1005,6 +1033,32 @@ keeps its cell 0.
 at the joint after the last cell, it's unwind, join, wind. at any other joint,
 the circle is first rotated so that joint comes round to the end, and rotated
 back afterwards.
+
+#### collapse
+
+`Collapse(B)` lifts a scope until its parent is the root, or a layer it can't
+look past. the whole chain of scopes in between collapses, and B ends up as one
+scope of the top.
+
+    Collapse(B)  :=  Lift(B), again and again, until its parent is a root or a layer
+
+#### flatten
+
+`Flatten(K)` presses a cascade until one spacer is left: its deepest choices,
+shown on its root's cells.
+
+    Flatten(K)  :=  Press(K), again and again, until one spacer is left
+    Flatten(|xx...x..| >> |x.x|)              →  |x....x..|
+    Flatten(|xx...x.x| >> |x.xx| >> |.xx|)    →  |.....x.x|
+
+- the result has the root's resolution and reading
+- flattening forgets the layers, the way detach forgets a context: the
+  flattened spacer doesn't show that it was chosen in steps (see "layers")
+- the order doesn't matter: any run of neighbouring layers, written out, is a
+  cascade too, and flattening the top part first, `Flatten(R >> L1) >> L2`,
+  ends in the same spacer as pressing from the bottom. flattening a part is
+  partial flattening: `Flatten(R >> L1) >> L2`, or `R >> Flatten(L1 >> L2)`
+- there's no way back: many cascades flatten to the same spacer
 
 #### but not and xor
 
