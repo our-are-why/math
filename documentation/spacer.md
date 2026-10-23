@@ -1065,11 +1065,19 @@ rules are written (directly cell by cell, step by step from earlier spacers, or
 case by case).
 
 as a shorthand, the values can go in round brackets, in a fixed order and
-without keys: `Primes(8) -> |..xx.x.x|`. the order has to be stated for each
-generator, the way a short key is mapped: for `Primes`, the one value is the
-resolution. braces have no order, so in braces every value needs its key. a
-label directly before round brackets gives a generator its values; round
-brackets on their own are a stack.
+without keys: `Primes(8) -> |..xx.x.x|`. the order comes from the generator's
+**signature**, which lists its keys in order, the same way each operation is
+introduced with its values in order (`Rotate(S, k)`):
+
+    Primes(r)                    one value: the resolution
+    Block(r, d)                  the first d cells filled: first the resolution, then the density
+    Block(8, 3)                  means  Block{r: 8, d: 3}
+    Block(8, 3) -> |xxx.....|
+
+keys in a signature are mapped to their full names, like any short key. braces
+have no order, so in braces every value needs its key. a label directly before
+round brackets gives a generator its values; round brackets on their own are a
+stack.
 
 generators are described by a few independent **facets**. each can be read on
 its own, and any combination can occur, with one exception noted below.
