@@ -683,6 +683,7 @@ implementations. all _from memory_; check before citing.
 | a fluid spacer borrowing a reading during an operation | **lenses** and **optics** in functional programming: composable ways of focusing on part of a structure to read or rebuild it. the research area is **bidirectional transformations** | |
 | unwind and close | an **iso**: an optic that converts losslessly both ways between two views of the same data | |
 | a default identity with overridable comparisons | equality versus equivalence; javascript's `==` and `===` | the model's `=`, `==`, `===` scale runs opposite to javascript on purpose |
+| threshold, levels and depths: a row of amounts and a cascade as two views of one nested structure | **threshold decomposition** (signal processing, the basis of stack filters); the **layer-cake representation** (measure theory); **level sets** and **contour lines** of a height map; thresholding an image into black and white | the nesting is exact: each level sits inside the one above, and stacking the levels gives the amounts back |
 | one spacer, several presentations (typed and display forms) | **model and view** (MVC); **read models** and **projections** (CQRS) | |
 
 ### design notes for the implementations
@@ -830,3 +831,4 @@ background:
 - "bidirectional transformations" / lenses / optics / "isos"
 - "phantom types" / "branded types" / newtype
 - "database views" / "numpy views" / "model view controller" / CQRS projections
+- "threshold decomposition" / "stack filters" / "layer cake representation" / "level sets"

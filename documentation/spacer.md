@@ -657,7 +657,8 @@ amounts, where the amount works almost like an extra dimension. that world is
 noted here, not explored.
 
 weights are written as a row of numbers, which are amounts, not states (rule
-4): `|2 2 0 1 0 3 1 0|`.
+4): `|2 2 0 1 0 3 1 0|`. `Weights((A, B, C))` gives a stack's weights as such a
+row.
 
 ("weight" has another meaning in coding theory, where a string's weight is its
 number of 1s; here, that's density. here, weights are always taken across a
@@ -690,18 +691,25 @@ between the spacers; the display form can use the set symbols: `A ∩ B`,
 they're also thresholds on weights: stack A and B, and `A and B` is where the
 weight is 2, `A or B` where it's at least 1, and `A xor B` where it's exactly 1.
 with more spacers in a stack, any threshold works the same way, such as "at
-least half of them".
+least half of them" (see threshold, in "operations").
+
+`and` and `or` chain without brackets: `A or B or C` is filled where at least
+one is, and `A and B and C` where all are. `xor` chains too, but it doesn't mean
+"exactly one": `A xor B xor C` is filled where an odd number are. with the
+stack from "collections, stacks and weights", that's `|...x.xx.|`, while
+"exactly one" is `|...x..x.|`.
 
 ## operations
 
 an **operation** takes spacers and gives back a spacer. they come in two kinds:
 
 - **primitives**, which each do one basic thing: commit, rotate, slide,
-  reverse, mirror, join, unwind, wind, detach and flatten, along with taking a scope,
-  layering (`>>`), and the cell-by-cell `not`, `and` and `or` from "combining
-  spacers"
+  reverse, mirror, join, unwind, wind, detach, flatten and threshold, along
+  with taking a scope, layering (`>>`), and the cell-by-cell `not`, `and` and
+  `or` from "combining spacers"
 - **named composites**, which are made of primitives and named because they're
-  useful: repeat, insert, splice, `but not` and `xor`. each is defined by the
+  useful: repeat, insert, splice, `but not`, `xor`, at most, exactly, levels
+  and depths. each is defined by the
   primitives it's made of, so composites can be added or dropped without
   touching anything else
 
@@ -921,6 +929,22 @@ spacer:
   flattened spacer doesn't show that it was chosen in steps (see "layers")
 - there's no way back: many cascades flatten to the same spacer
 
+#### threshold
+
+`Threshold(W, k)` turns a row of amounts back into a spacer: a cell is filled
+where its amount is at least k, and the result keeps the row's reading. it's
+the bridge from amounts back to states, the way detach is the bridge from a
+view. with the stack A, B, C from "collections, stacks and weights":
+
+    W := Weights((A, B, C))     →  |2 2 0 1 0 3 1 0|
+    Threshold(W, 1)             →  |xx.x.xx.|       at least one of them
+    Threshold(W, 2)             →  |xx...x..|       at least two
+    Threshold(W, 3)             →  |.....x..|       all three
+
+for two spacers, `or` and `and` are the two simplest thresholds: `A or B` is
+`Threshold(Weights((A, B)), 1)`, and `A and B` is
+`Threshold(Weights((A, B)), 2)`.
+
 ### named composites
 
 each of these is made of primitives, and its definition says how. `:=` reads
@@ -980,6 +1004,35 @@ made of (see "combining spacers"):
     U := A or B
     I := A and B
     A xor B       :=  U but not I
+
+#### at most and exactly
+
+    AtMost(W, k)   :=  not Threshold(W, k + 1)
+    Exactly(W, k)  :=  Threshold(W, k) but not Threshold(W, k + 1)
+    Exactly(W, 1)               →  |...x..x.|
+
+#### levels and depths
+
+one threshold loses information, but thresholding at every level loses
+nothing. `Levels(W)` thresholds W at every amount from 1 up to its largest, and
+puts the results in a cascade: the first level is the root, and each next level
+chooses, among the previous level's points, those that reach the next amount.
+shown flattened, on the root's cells:
+
+    W := |2 2 0 1 0 3 1 0|
+    level 1      x x . x . x x .      Threshold(W, 1): the root
+    level 2      x x . . . x . .      Threshold(W, 2), chosen among level 1's points
+    level 3      . . . . . x . .      Threshold(W, 3), chosen among level 2's points
+
+`Depths(K)` goes back: for each cell, how many levels of the cascade K it's in.
+`Depths(Levels(W))` is W again, and `Levels(Depths(K))` is K again, as long as K
+doesn't end in an all-empty layer.
+
+this isn't a coincidence. a row of whole amounts and a cascade are two ways of
+writing the same nested structure: counting how deep each cell goes, or listing
+the levels. a map shows the same pairing, between heights and the contour lines
+around them. what differs is the meaning: a cascade chooses, layer by layer,
+while a row of amounts counts.
 
 ## going to infinity
 
