@@ -20,6 +20,7 @@ experiments and findings: [SESSION_2026-10-19.md](SESSION_2026-10-19.md), [SESSI
 - [broader fields](#broader-fields)
   - [continuous perspective](#continuous-perspective)
   - [from discrete to continuous](#from-discrete-to-continuous)
+- [computing counterparts](#computing-counterparts)
 - [to explore: values with more dimensions](#to-explore-values-with-more-dimensions)
 - [reading list](#reading-list)
 - [search terms](#search-terms)
@@ -668,6 +669,32 @@ spectra.
 - take the Fourier transform of weight families (Wiener–Khinchin) and see what
   the spectra converge to
 
+## computing counterparts
+
+noted 2026-10-23, after settling readings, scopes and identity in
+`documentation/spacer.md`. established computing ideas that match the model's
+choices: crosswalk material, and design notes for the reference
+implementations. all _from memory_; check before citing.
+
+| model idea | computing counterpart | notes |
+| --- | --- | --- |
+| a scope: a focused view into a parent | a **view**: in databases, a stored query over data; in numpy, the same memory with another shape or offset, without copying | scopes can be views into their parent instead of copies |
+| a committed reading as part of what a spacer is | **newtypes**, **phantom types** and **branded types**: the same data in a type that changes which operations are allowed | the cells are the data and the reading is a type tag: fluid is untagged, committing is tagging. most languages let you unwrap, so the model's one-way rule is stricter |
+| a fluid spacer borrowing a reading during an operation | **lenses** and **optics** in functional programming: composable ways of focusing on part of a structure to read or rebuild it. the research area is **bidirectional transformations** | |
+| unwind and close | an **iso**: an optic that converts losslessly both ways between two views of the same data | |
+| a default identity with overridable comparisons | equality versus equivalence; javascript's `==` and `===` | the model's `=`, `==`, `===` scale runs opposite to javascript on purpose |
+| one spacer, several presentations (typed and display forms) | **model and view** (MVC); **read models** and **projections** (CQRS) | |
+
+### design notes for the implementations
+
+- in TypeScript, make the reading a branded or phantom type, so `Rotate`
+  won't accept a linear spacer and the type checker enforces the doc's rules.
+  Python's `NewType` or generics can do the same, more loosely
+- implement scopes as views into their parent, not copies
+- keep the cells as plain data, and have operations return new spacers rather
+  than change one in place (now in the doc: operations never mutate, and labels
+  are defined once)
+
 ## to explore: values with more dimensions
 
 noted 2026-10-22, while working on weights in `documentation/spacer.md`. a
@@ -800,3 +827,6 @@ background:
 - "hypercomplex numbers" / "normed division algebra" / "geometric algebra"
 - "visual variables" Bertin / "domain coloring" / "sparklines"
 - braille + "text-mode" plotting
+- "bidirectional transformations" / lenses / optics / "isos"
+- "phantom types" / "branded types" / newtype
+- "database views" / "numpy views" / "model view controller" / CQRS projections

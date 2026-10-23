@@ -338,7 +338,8 @@ mistaken for cells; words work too, like `Primes` or `S1`. inside edges, a
 label stands for its cells: `)S(` is S read circularly. a reading can only be
 applied to a fluid label: if S is already circular, `)S(` just repeats its
 reading, and `<S>` isn't allowed. like the point form, a label can carry its
-resolution: `)6: S(`.
+resolution: `)6: S(`. a label is defined once: it names one value, and never
+changes to mean another.
 
 ### descriptions
 
@@ -696,17 +697,53 @@ written as functions, the way generators take their values: the operation's
 name, then its values in round brackets, in a stated order. like stacking, an
 operation works on spacers as written, by default.
 
+operations never change a spacer in place: they always give a new one, and
+what went in stays as it was.
+
+most operations work on a spacer's cells. a few work on a view instead: they
+change how a spacer is looked at, not the spacer itself. taking a scope,
+sliding it and committing a fluid spacer to a reading are of this kind, and
+detach is the bridge from a view back to a spacer of its own.
+
 what's allowed depends on the readings going in, by the same idea as stacks:
 writing a spacer circular or linear says its reading is part of its structure;
 writing it fluid leaves the reading open, so it can take whichever part the
 operation needs.
 
-an operation may borrow a reading while it works, but **fluid in gives
-fluid out**: committing to a reading is left to whoever uses the result. a
+an operation may borrow a reading while it works, as long as its result
+doesn't depend on it afterwards, and **fluid in gives fluid out**: committing to a reading is left to whoever uses the result. a
 fluid spacer can be rotated as a circle and then read as a line: with
 `N := |xx...x..|`, `Rotate(N, 5)` is `|x..xx...|`, and `<Rotate(N, 5)>` is
 `<x..xx...>`. the only exceptions are the operations whose job is to change
 a reading: unwind and close.
+
+### commit
+
+committing gives a fluid spacer a reading, by putting edges around it. it's a
+view operation: the cells stay as they are, and the result is a new, committed
+spacer. the fluid one stays fluid.
+
+    N := |xx...x..|
+    )N(                       →  )xx...x..(       committed circular
+    <N>                       →  <xx...x..>       committed linear
+
+a literal can simply be written committed from the start: `)xx...x..(`. edges
+can also go around an expression, or around something passed to an operation.
+wherever an edge would touch another bracket, a space keeps them apart:
+`) Rotate(N, 5) (`, `Rotate( )N(, 5)`.
+
+there are two places to commit, and they say different things:
+
+- **on what goes in**: `Rotate( )N(, 5)` commits N as a circle before rotating
+  it, so the result is a circle too: `)x..xx...(`. this says the circle is
+  part of the structure. using the result as a line afterwards takes a
+  conversion: `Unwind(Rotate( )N(, 5), 1)` gives `<x..xx...>`
+- **on what comes out**: `<Rotate(N, 5)>` keeps N fluid through the rotation,
+  which borrows a circular reading, and commits only the result, as a line:
+  `<x..xx...>`. this says the circle was only needed for the move
+
+both arrive at the same cells here. which to use depends on whether the reading
+is part of the structure, or a perspective decided later.
 
 ### rotate
 
@@ -720,27 +757,38 @@ cell 0.
 
 - **circular**: yes. this is the rotating described in "writing a spacer down"
 - **fluid**: yes, read circularly for the move; the result stays fluid
-- **linear**: no. a line's ends are part of its structure, and rotating would
-  carry cells across them; see shift
+- **linear**: no. a line has no way round to rotate along. a scoped piece can
+  slide along its parent instead
 
-### shift
+### slide
 
-`Shift(S, k)` is the closest a line has to rotating. like `Rotate`, it starts S
-from its cell k, but cells carried past an end fall off, since nothing lies
-beyond a line's ends, and empty cells come in at the other end.
+`Slide(A, k)` moves a scoped piece along its parent: the window keeps its
+length, and starts from what was its cell k, which can lie beyond its end. it
+works on the view, not on a spacer: the parent stays as it is, and only the
+part the window shows changes.
 
-    S := <xx...x..>
-    Shift(S, 2)        →  <...x....>       the two cells before cell 2 fall off
-    Shift(S, -2)       →  <..xx...x>       two empty cells come in at the start
+    S := )xx...x..(
+    A := )8: S([5+4]       →  [x..xx]       S's cells 5, 6, 7, 0, 1
+    Slide(A, 2)            →  [.xx..]       S's cells 7, 0, 1, 2, 3: )8: S([7+4]
+    Slide(A, -1)           →  [.x..x]       S's cells 4, 5, 6, 7, 0
 
-- **linear**: yes
-- **fluid**: yes, read linearly for the move; the result stays fluid
-- **circular**: no; rotate instead
-- sliding a scoped piece along its parent brings in real cells from beyond,
-  not empty ones. that's a change of the scope's range, not a shift
+    T := <xx...x..>
+    B := <8: T>[2->5]      →  [...x]
+    Slide(B, 2)            →  [.x..]        T's cells 4 to 7
+    Slide(B, 3)            →  not allowed   it would run past T's end
 
-shift is offered tentatively: a line has no natural way round, and dropping
-cells may not suit every use.
+- it moves k steps the way the window walks, in its own + direction
+- **circular parent**: it slides freely, wrapping round
+- **linear parent**: it can't pass the parent's ends. sliding only as far as it
+  can (clamping), or letting the window shrink, would both change what was
+  asked for without saying so
+- **fluid parent**: within the ends, it slides as usual. crossing an end would
+  only make sense if the parent were circular, and the window stays tied to its
+  parent afterwards, so the parent's reading has to be committed first: `)S(`
+  to wrap round, `<S>` to stay bounded
+- a scope of a scope slides within its immediate parent
+- it undoes cleanly: `Slide(Slide(A, 2), -2)` is A again, as long as each slide
+  was allowed
 
 ### reverse
 
@@ -764,17 +812,21 @@ cells go in as one block, and the result takes the host's reading.
     G := <x.>
     Insert(H, 2, G)    →  )xxx...(
 
-only something with ends can be put into something else:
+only something with free ends can be put into something else:
 
-| what goes in ↓, host → | linear | circular | fluid |
-| ---------------------- | ------ | -------- | ----- |
-| **linear**             | yes    | yes      | yes   |
-| **fluid**              | yes    | yes      | yes   |
-| **circular**           | no     | no       | no    |
+| what goes in ↓, host → | linear | circular | fluid | scoped |
+| ---------------------- | ------ | -------- | ----- | ------ |
+| **linear**             | yes    | yes      | yes   | no     |
+| **fluid**              | yes    | yes      | yes   | no     |
+| **circular**           | no     | no       | no    | no     |
+| **scoped**             | no     | no       | no    | no     |
 
 a spacer written circular says it has no ends, so there's nothing to attach. if
 its circularity is only a perspective, it can be written fluid, and then it
-can go in.
+can go in. a scoped piece has ends, but they aren't free: just past each one is
+its parent's next cell, and attaching something there would contradict the
+parent. so a scoped piece can't go in, and it can't be a host either:
+inserting into a window would mean inserting into its parent.
 
 - a linear host with n cells has n + 1 places to insert: before each cell, and
   after the last (k from 0 to n)
@@ -809,10 +861,11 @@ frame's cell 0. `Close(S)` joins a line's two ends into a circle.
 
 - the round trip loses nothing: closing an unwound lap gives the circle back,
   and unwinding a closed line gives the line back, since both start at cell 0
-- unwind takes a circle, or a fluid spacer read as one; close takes a line,
-  or a fluid spacer read as one. a fluid spacer doesn't need them to be
-  read either way, though: `<N^3>`, with `N := |x..|`, already reads three
-  copies as a line
+- unwind takes a circle and close takes a line: they're the conversions between
+  the two committed shapes. a fluid spacer doesn't need them, since it commits
+  directly, as `)N(` or `<N>`, and `<N^3>`, with `N := |x..|`, reads three
+  copies as a line. this keeps the two moves apart, as the comparisons do:
+  committing is fitting (`~=`), and converting is unwind and close (`<->`)
 - unwinding starts where the spacer's frame starts, its cell 0 as written;
   starting somewhere else means rotating first
 - a circular scope with laps walks the same cells: `)3: S([0~2%+2]` gives
@@ -822,6 +875,24 @@ unwinding can also happen over time: a generator that unwinds one more cell at
 each resolution, where cell j copies S's cell j, counting round S as many times
 as needed. earlier cells never change, so it grows: `|x|` → `|x.|` → `|x..|` →
 `|x..x|` → …, and without end it reaches S repeating: `)x..(~`.
+
+### detach
+
+`Detach(A)` takes a scoped piece's cells out of their context, as a line of
+their own: the window's edges become free ends.
+
+    S := )xx...x..(
+    A := )8: S([5+4]       →  [x..xx]
+    Detach(A)              →  <x..xx>
+
+- the result is linear: a piece is already linear in its own terms, and a
+  reading only goes one way. `Close(Detach(A))` makes it a circle
+- detaching forgets the context: the parent, and where the piece sat in it. so
+  `Detach(A) === A`, the same cells, but they aren't the same spacer: one is
+  whole, the other a part. there's no way back, except taking the scope from
+  the parent again
+- it's what lets a piece be used on its own: joined or inserted, or studied as
+  a spacer in its own right
 
 ## going to infinity
 
@@ -956,6 +1027,15 @@ so by default, `|8: 0,1,5|` is the same spacer as `|xx...x..|`. but `)x.x..(`
 and `)x..x.(` are different (one is the other rotated), and so are `|x..|` and
 `<x..>` (one is fluid, the other committed to linear).
 
+a scoped piece and a whole linear spacer with the same cells, like `[x..]` and
+`<x..>`, aren't the same spacer by default: one is a piece of something larger,
+the other is the whole thing. they are alike, though: the same cells, behaving
+the same way within their ends, so a use that only cares about the cells can
+set the context aside and treat them as the same, written `[x..] === <x..>`
+(see below). likewise, two cascades that flatten to the same spacer are alike,
+giving the same cells, but whether they're the same cascade, layer by layer, is
+a higher-level question, left to the uses that need it.
+
 comparing cell by cell includes the conventions, cell 0 and the direction. that
 doesn't make them essence (see "essence and convention"): the default is simply
 the strictest comparison, so it never merges two spacers that a use might need
@@ -967,7 +1047,7 @@ identity, and it runs one way only, from the open reading to a committed one:
 `|x..|` fits both `)x..(` and `<x..>`, but those two are still different
 spacers. between them, unwind and close convert either way, losing nothing.
 
-that gives four ways of comparing:
+that gives five ways of comparing:
 
 | comparison                 | means                                                     | typed | display |
 | -------------------------- | --------------------------------------------------------- | ----- | ------- |
@@ -975,19 +1055,34 @@ that gives four ways of comparing:
 | **fits**                   | a commitment away: one fluid, the other committed         | `~=`  | `≃`     |
 | **converts**               | a conversion away: one circle, one line, the same cells   | `<->` | `⇄`     |
 | **the same up to reading** | any of the three above                                    | `==`  | `≈`     |
+| **matches**                | the same number of cells and the same value in every numbered cell, whatever the reading, context or origin | `===` | `≍` |
 
     |x..| ~= )x..(        fits
     )x..( <-> <x..>       converts
     |x..| == <x..>        the same up to reading: here, because it fits
     )x..( == <x..>        the same up to reading: here, because it converts
+    [x..] === <x..>       matches: a piece and a whole line, with the same cells
+    [x..] === )x..(       matches: a piece and a whole circle; only the cells count
 
-`==` is whichever of `=`, `~=` and `<->` applies. `=` and `==` chain: if A is
-the same as B, and B as C, then A is the same as C. `~=` and `<->` don't: two
-fittings from the same fluid spacer give a conversion, and two conversions come
-back to the same reading, which is identity. `<->` needs spaces around it, so it's never read as edges.
+the more `=` signs, the more is set aside: `=` sets aside nothing, `==` the
+reading, and `===` the reading and the context. (this runs opposite to
+javascript, where `===` is the strictest.)
 
-**overriding the default.** a use can loosen it by setting something aside, or
-tighten it by adding something. the usual loosenings have exact forms through
+`==` is whichever of `=`, `~=` and `<->` applies. `=`, `==` and `===` chain: if
+A is the same as B, and B as C, then A is the same as C. `~=` and `<->` don't:
+two fittings from the same fluid spacer give a conversion, and two conversions
+come back to the same reading, which is identity. `<->` needs spaces around it,
+so it's never read as edges.
+
+`===` compares values, so it works for rows of weights too, where the values
+are amounts rather than states. the numbering still counts: `)x..( === ).x.(`
+is false, since setting the start aside is a separate loosening.
+
+**overriding the default.** the default asks whether the entire thing is the
+same. being alike, matching in some respects and behaving similarly, is a
+looser question, and the overrides below are ways of asking it. a use can
+loosen the default by setting something aside, or tighten it by adding
+something. the usual loosenings have exact forms through
 the operations:
 
 - **up to start**: the same when one is a rotation of the other
