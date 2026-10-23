@@ -42,7 +42,7 @@ a reading can also be left open: such a spacer is **fluid**, and can be read
 either way later. once a spacer is read circular or linear, though, that
 becomes part of what it is: it doesn't go back to fluid, or switch to the
 other reading, on its own. turning one into the other takes an operation (see
-"operations"): unwinding a circle from its cell 0 gives a line, and closing a
+"operations"): unwinding a circle from its cell 0 gives a line, and winding a
 line, so its ends join, gives a circle.
 
 ## filled and empty
@@ -143,8 +143,10 @@ primes: here, that's an interval, not a gap.)
 
 ### seams, bands and runs
 
-a **seam** is a place where neighbouring cells are in different states. the
-seams cut a spacer into **bands**: stretches of cells in the same state, each
+every place where two neighbouring cells meet is a **joint**: a line of n
+cells has n − 1 joints, and a circle of n cells has n, since its last cell and
+cell 0 meet too. a **seam** is a joint where the two cells are in different
+states. the seams cut a spacer into **bands**: stretches of cells in the same state, each
 as long as it goes. a band of two or more cells is a **run**. (**panel** would
 work as well as band: panels are what seams join.)
 
@@ -682,7 +684,8 @@ these are the familiar operations of logic, and of sets read on the points:
 `and` is intersection, `or` is union, `xor` is symmetric difference, `but not`
 is difference and `not` is the complement. the typed form writes them as words
 between the spacers; the display form can use the set symbols: `A ∩ B`,
-`A ∪ B`, `A △ B`, `A ∖ B`.
+`A ∪ B`, `A △ B`, `A ∖ B`. `not`, `and` and `or` are primitives; `but not` and
+`xor` are made of them (see "operations").
 
 they're also thresholds on weights: stack A and B, and `A and B` is where the
 weight is 2, `A or B` where it's at least 1, and `A xor B` where it's exactly 1.
@@ -691,33 +694,51 @@ least half of them".
 
 ## operations
 
-an **operation** takes spacers and gives back a spacer. two are already here:
-the negative (`not A`) and combining (`A and B` and the rest). the others are
-written as functions, the way generators take their values: the operation's
-name, then its values in round brackets, in a stated order. like stacking, an
-operation works on spacers as written, by default.
+an **operation** takes spacers and gives back a spacer. they come in two kinds:
+
+- **primitives**, which each do one basic thing: commit, rotate, slide,
+  reverse, mirror, join, unwind, wind, detach and flatten, along with taking a scope,
+  layering (`>>`), and the cell-by-cell `not`, `and` and `or` from "combining
+  spacers"
+- **named composites**, which are made of primitives and named because they're
+  useful: repeat, insert, splice, `but not` and `xor`. each is defined by the
+  primitives it's made of, so composites can be added or dropped without
+  touching anything else
+
+most are written as functions, the way generators take their values: the
+operation's name, then its values in round brackets, in a stated order. like
+stacking, an operation works on spacers as written, by default.
 
 operations never change a spacer in place: they always give a new one, and
 what went in stays as it was.
 
 most operations work on a spacer's cells. a few work on a view instead: they
 change how a spacer is looked at, not the spacer itself. taking a scope,
-sliding it and committing a fluid spacer to a reading are of this kind, and
-detach is the bridge from a view back to a spacer of its own.
+sliding it and committing a fluid spacer to a reading are of this kind. detach
+and flatten are the bridges from a view, or a cascade, back to a spacer of its
+own.
 
 what's allowed depends on the readings going in, by the same idea as stacks:
 writing a spacer circular or linear says its reading is part of its structure;
 writing it fluid leaves the reading open, so it can take whichever part the
 operation needs.
 
-an operation may borrow a reading while it works, as long as its result
-doesn't depend on it afterwards, and **fluid in gives fluid out**: committing to a reading is left to whoever uses the result. a
-fluid spacer can be rotated as a circle and then read as a line: with
+an operation can borrow a reading while it works, as long as just one reading
+makes sense for it and its result doesn't depend on it afterwards, and **fluid
+in gives fluid out**: committing to a reading is left to whoever uses the
+result. a fluid spacer can be rotated as a circle and then read as a line: with
 `N := |xx...x..|`, `Rotate(N, 5)` is `|x..xx...|`, and `<Rotate(N, 5)>` is
-`<x..xx...>`. the only exceptions are the operations whose job is to change
-a reading: unwind and close.
+`<x..xx...>`. the only exceptions are the operations whose job is to change a
+reading: unwind and wind.
 
-### commit
+each operation does one kind of thing to one kind of spacer. when the same idea
+means different things for lines and circles, they get different operations,
+rather than one operation that behaves differently depending on what it's
+given.
+
+### primitives
+
+#### commit
 
 committing gives a fluid spacer a reading, by putting edges around it. it's a
 view operation: the cells stay as they are, and the result is a new, committed
@@ -737,7 +758,7 @@ there are two places to commit, and they say different things:
 - **on what goes in**: `Rotate( )N(, 5)` commits N as a circle before rotating
   it, so the result is a circle too: `)x..xx...(`. this says the circle is
   part of the structure. using the result as a line afterwards takes a
-  conversion: `Unwind(Rotate( )N(, 5), 1)` gives `<x..xx...>`
+  conversion: `Unwind(Rotate( )N(, 5))` gives `<x..xx...>`
 - **on what comes out**: `<Rotate(N, 5)>` keeps N fluid through the rotation,
   which borrows a circular reading, and commits only the result, as a line:
   `<x..xx...>`. this says the circle was only needed for the move
@@ -745,11 +766,11 @@ there are two places to commit, and they say different things:
 both arrive at the same cells here. which to use depends on whether the reading
 is part of the structure, or a perspective decided later.
 
-### rotate
+#### rotate
 
 `Rotate(S, k)`, a **rotation/phase**, starts S from its cell k: the cells come
-round in the same order, and cell k becomes cell 0. k can be negative: −2 is two cells back from
-cell 0.
+round in the same order, and cell k becomes cell 0. k can be negative: −2 is
+two cells back from cell 0.
 
     S := )xx...x..(
     Rotate(S, 5)       →  )x..xx...(
@@ -760,7 +781,7 @@ cell 0.
 - **linear**: no. a line has no way round to rotate along. a scoped piece can
   slide along its parent instead
 
-### slide
+#### slide
 
 `Slide(A, k)` moves a scoped piece along its parent: the window keeps its
 length, and starts from what was its cell k, which can lie beyond its end. it
@@ -790,93 +811,87 @@ part the window shows changes.
 - it undoes cleanly: `Slide(Slide(A, 2), -2)` is A again, as long as each slide
   was allowed
 
-### reverse
+#### reverse
 
-`Reverse(S)` runs the numbering the other way. which cell ends up as cell 0
-depends on the reading:
+`Reverse(L)` runs a line's numbering the other way: its ends swap, so
+`<xx...x..>` becomes `<..x...xx>`.
 
-- **linear**: the ends swap: `<xx...x..>` becomes `<..x...xx>`
-- **circular**: cell 0 stays where it is, and the other cells come round the
-  other way: `)xx...x..(` becomes `)x..x...x(`
-- **fluid**: as written, end to end, like linear
+- **linear**: yes
+- **circular**: no; a circle is mirrored instead
+- **fluid**: yes, read as a line for the move; the result stays fluid.
+  `Reverse(|xx...x..|)` is `|..x...xx|`, while `Mirror(|xx...x..|)` is
+  `|x..x...x|`: two different operations, so nothing is left ambiguous
 
-the two results differ only in where they start: the circular one is the
-end-to-end one, started one cell earlier.
+#### mirror
 
-### insert and join
+`Mirror(C)` mirrors a circle, pivoting on cell 0: cell 0 stays where it is, and
+cell j goes to cell −j, so the other cells come round the other way.
 
-`Insert(H, k, G)` puts a spacer G into a host H, just before H's cell k. G's
-cells go in as one block, and the result takes the host's reading.
+    )xx...x..(   →  )x..x...x(       8 cells: the mirror line runs through cell 0 and cell 4
+    )xx..x..(    →  )x..x..x(        7 cells: through cell 0 and the joint between cells 3 and 4
 
-    H := )xx..(
-    G := <x.>
-    Insert(H, 2, G)    →  )xxx...(
+- **circular**: yes. whether the mirror line comes out at a cell or at a joint
+  on the far side depends on whether the resolution is even or odd; the
+  operation is the same either way
+- **fluid**: yes, read circularly for the move; the result stays fluid
+- **linear**: no; that's reverse
+- mirroring twice gives the circle back, and mirror and rotate combine the way
+  reflections and turns do: `Mirror(Rotate(C, k))` is `Rotate(Mirror(C), -k)`
+- any other mirror line is a mirror and then a rotate. the line through the
+  joint before cell 0 is `Rotate(Mirror(C), 1)`, which is also
+  `Wind(Reverse(Unwind(C)))`: reading the cells backwards and closing them
+  again
 
-only something with free ends can be put into something else:
+#### join
 
-| what goes in ↓, host → | linear | circular | fluid | scoped |
-| ---------------------- | ------ | -------- | ----- | ------ |
-| **linear**             | yes    | yes      | yes   | no     |
-| **fluid**              | yes    | yes      | yes   | no     |
-| **circular**           | no     | no       | no    | no     |
-| **scoped**             | no     | no       | no    | no     |
+`Join(A, B)` puts B after A's last cell: two lines, end to end, make a longer
+line.
 
-a spacer written circular says it has no ends, so there's nothing to attach. if
-its circularity is only a perspective, it can be written fluid, and then it
-can go in. a scoped piece has ends, but they aren't free: just past each one is
-its parent's next cell, and attaching something there would contradict the
-parent. so a scoped piece can't go in, and it can't be a host either:
-inserting into a window would mean inserting into its parent.
+    Join(<x.>, <.xx>)      →  <x..xx>
 
-- a linear host with n cells has n + 1 places to insert: before each cell, and
-  after the last (k from 0 to n)
-- a circular host has n: the gaps between neighbours (k from 1 to n). before
-  cell 0 and after the last cell are the same gap, written as k = n, and the
-  host keeps its cell 0
-- **join** is inserting at the end: `Join(A, B)` puts B after A's last cell.
-  `<x.>` joined with `<.xx>` gives `<x..xx>`
+- only something with free ends can be joined: a line, or a fluid spacer read
+  as one. joining two fluid spacers gives a fluid one; joining a fluid spacer
+  to a line gives a line
+- a circle written circular says it has no ends, so there's nothing to attach.
+  if its circularity is only a perspective, it can be written fluid, and then
+  it can be joined
+- a scoped piece has ends, but they aren't free: just past each one is its
+  parent's next cell, and attaching something there would contradict the
+  parent. detach it first
 
-### repeat
-
-`Repeat(S, m)` builds the spacer that is S written m times in a row:
-`Repeat(|x..|, 3)` is `|x..x..x..|`. the study of strings writes this as a
-power, and here `S^3` is shorthand for `Repeat(S, 3)`. the result keeps S's
-reading: a circle repeated is a circle that goes round the pattern m times.
-
-this builds a new, longer spacer. `~` is different: it says a spacer repeats in
-its surroundings, and leaves the spacer as it is.
-
-### unwind and close
+#### unwind and wind
 
 these two change a committed reading, so they're the only operations that turn
 a circle into a line, or a line into a circle.
 
-`Unwind(S, m)` opens a circle into a line m laps long, starting from its
-frame's cell 0. `Close(S)` joins a line's two ends into a circle.
+`Unwind(C)` opens a circle into a line, starting from its frame's cell 0.
+`Wind(L)` joins a line's two ends into a circle.
 
-    S := )x..(
-    Unwind(S, 1)       →  <x..>           one lap: the same cells, now as a line
-    Unwind(S, 3)       →  <x..x..x..>     three laps
-    Close(<x..>)       →  )x..(           the ends join
+    C := )x..(
+    Unwind(C)               →  <x..>          the same cells, now as a line
+    Wind(<x..>)             →  )x..(          the ends join
+    Repeat(Unwind(C), 3)    →  <x..x..x..>    three laps: unwind, then repeat
 
-- the round trip loses nothing: closing an unwound lap gives the circle back,
-  and unwinding a closed line gives the line back, since both start at cell 0
-- unwind takes a circle and close takes a line: they're the conversions between
+- each does one thing: unwind only opens, and wind only joins the ends. laps
+  come from repeat
+- the round trip loses nothing: winding an unwound circle gives it back, and
+  unwinding a wound line gives the line back, since both start at cell 0
+- unwind takes a circle and wind takes a line: they're the conversions between
   the two committed shapes. a fluid spacer doesn't need them, since it commits
-  directly, as `)N(` or `<N>`, and `<N^3>`, with `N := |x..|`, reads three
-  copies as a line. this keeps the two moves apart, as the comparisons do:
-  committing is fitting (`~=`), and converting is unwind and close (`<->`)
+  directly, as `)N(` or `<N>`. this keeps the two moves apart, as the
+  comparisons do: committing is fitting (`~=`), and converting is unwind and
+  wind (`<->`)
 - unwinding starts where the spacer's frame starts, its cell 0 as written;
   starting somewhere else means rotating first
-- a circular scope with laps walks the same cells: `)3: S([0~2%+2]` gives
-  `[x..x..x..]`, a scoped piece
+- a circular scope with laps walks the same cells as unwinding and repeating:
+  `)3: C([0~2%+2]` gives `[x..x..x..]`, a scoped piece
 
 unwinding can also happen over time: a generator that unwinds one more cell at
-each resolution, where cell j copies S's cell j, counting round S as many times
+each resolution, where cell j copies C's cell j, counting round C as many times
 as needed. earlier cells never change, so it grows: `|x|` → `|x.|` → `|x..|` →
-`|x..x|` → …, and without end it reaches S repeating: `)x..(~`.
+`|x..x|` → …, and without end it reaches C repeating: `)x..(~`.
 
-### detach
+#### detach
 
 `Detach(A)` takes a scoped piece's cells out of their context, as a line of
 their own: the window's edges become free ends.
@@ -886,13 +901,85 @@ their own: the window's edges become free ends.
     Detach(A)              →  <x..xx>
 
 - the result is linear: a piece is already linear in its own terms, and a
-  reading only goes one way. `Close(Detach(A))` makes it a circle
+  reading only goes one way. `Wind(Detach(A))` makes it a circle
 - detaching forgets the context: the parent, and where the piece sat in it. so
   `Detach(A) === A`, the same cells, but they aren't the same spacer: one is
   whole, the other a part. there's no way back, except taking the scope from
   the parent again
-- it's what lets a piece be used on its own: joined or inserted, or studied as
-  a spacer in its own right
+- it's what lets a piece be used on its own: joined, or studied as a spacer in
+  its own right
+
+#### flatten
+
+`Flatten(R >> L)` shows a cascade's deepest choices on its root's cells, as one
+spacer:
+
+    Flatten(|xx...x..| >> |x.x|)    →  |x....x..|
+
+- the result has the root's resolution and reading
+- flattening forgets the layers, the way detach forgets a context: the
+  flattened spacer doesn't show that it was chosen in steps (see "layers")
+- there's no way back: many cascades flatten to the same spacer
+
+### named composites
+
+each of these is made of primitives, and its definition says how. `:=` reads
+"is defined as", as it does for labels.
+
+#### repeat
+
+`Repeat(L, m)` builds the line that is L written m times in a row, end to end:
+
+    Repeat(L, 3)  :=  Join(L, Join(L, L))
+    Repeat(<x..>, 3)        →  <x..x..x..>
+
+the study of strings writes this as a power, and here `L^3` is shorthand for
+`Repeat(L, 3)`.
+
+- **linear**: yes
+- **fluid**: yes, and the result stays fluid: the copies come out as the same
+  cells whichever way it's read, so nothing depends on a borrowed reading.
+  `|x..|^3` is `|x..x..x..|`
+- **circular**: no. a circle traced round m times is three moves, none of them
+  basic, so it's written out when a use wants it: `Wind(Repeat(Unwind(C), m))`
+- **scoped**: no. its ends aren't free; detach it first
+
+this builds a new, longer spacer. `~` is different: it says a spacer repeats in
+its surroundings, and leaves the spacer as it is.
+
+#### insert
+
+`Insert(H, k, G)` puts a line G into a line H at the joint before H's cell k, k
+from 1 to n − 1: H's cells before cell k, then G, then the rest.
+
+    Insert(H, k, G)  :=  Join(Join(Detach(<n: H>[0->k-1]), G), Detach(<n: H>[k->n-1]))
+    Insert(<xx..>, 2, <x.>)    →  <xxx...>
+
+at either end, it's simply a join.
+
+#### splice
+
+`Splice(C, k, G)` puts a line G into a circle C at the joint before C's cell k,
+k from 1 to n, where k = n is the joint between the last cell and cell 0. C
+keeps its cell 0.
+
+    Splice(C, n, G)  :=  Wind(Join(Unwind(C), G))
+    Splice(C, k, G)  :=  Rotate(Wind(Join(Unwind(Rotate(C, k)), G)), n - k)
+    Splice( )xx..(, 2, <x.>)   →  )xxx...(
+
+at the joint after the last cell, it's unwind, join, wind. at any other joint,
+the circle is first rotated so that joint comes round to the end, and rotated
+back afterwards.
+
+#### but not and xor
+
+these two are written as words between spacers, like the primitives they're
+made of (see "combining spacers"):
+
+    A but not B   :=  A and not B
+    U := A or B
+    I := A and B
+    A xor B       :=  U but not I
 
 ## going to infinity
 
@@ -1045,7 +1132,7 @@ a fluid spacer **fits** a circular or linear spacer with the same resolution and
 cells: it could become it, just by committing to a reading. fitting isn't
 identity, and it runs one way only, from the open reading to a committed one:
 `|x..|` fits both `)x..(` and `<x..>`, but those two are still different
-spacers. between them, unwind and close convert either way, losing nothing.
+spacers. between them, unwind and wind convert either way, losing nothing.
 
 that gives five ways of comparing:
 
