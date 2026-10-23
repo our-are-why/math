@@ -682,6 +682,7 @@ implementations. all _from memory_; check before citing.
 | a committed reading as part of what a spacer is | **newtypes**, **phantom types** and **branded types**: the same data in a type that changes which operations are allowed | the cells are the data and the reading is a type tag: fluid is untagged, committing is tagging. most languages let you unwrap, so the model's one-way rule is stricter |
 | a fluid spacer borrowing a reading during an operation | **lenses** and **optics** in functional programming: composable ways of focusing on part of a structure to read or rebuild it. the research area is **bidirectional transformations** | |
 | unwind and close | an **iso**: an optic that converts losslessly both ways between two views of the same data | |
+| a stack's stages: its running weights, one row per member added | **prefix sums**; a **scan** in functional programming, which gives every partial result (Python's `accumulate`) | the doc calls them stages, for now |
 | a default identity with overridable comparisons | equality versus equivalence; javascript's `==` and `===` | the model's `=`, `==`, `===` scale runs opposite to javascript on purpose |
 | threshold, levels and depths: a row of amounts and a cascade as two views of one nested structure | **threshold decomposition** (signal processing, the basis of stack filters); the **layer-cake representation** (measure theory); **level sets** and **contour lines** of a height map; thresholding an image into black and white | the nesting is exact: each level sits inside the one above, and stacking the levels gives the amounts back |
 | one spacer, several presentations (typed and display forms) | **model and view** (MVC); **read models** and **projections** (CQRS) | |
@@ -764,6 +765,27 @@ citing.
 - so a complex-valued cell could be a single coloured glyph: hue for the angle,
   size or brightness for the amount
 
+### what weights remember
+
+noted 2026-10-23. weights are derived from their stack, but can show structure
+of the whole that no member shows (weak emergence). a sharper question: do a
+family's weights determine the spacer they came from?
+
+- **sometimes, yes** (computed 2026-10-23): thresholding an evenly spread
+  family's weights at just over half gives back an evenly spread spacer, in 369
+  of 369 odd-density coprime families up to 60 cells. `[7, 3]`: weights
+  `3 0 2 1 1 2 0`, thresholded at 2, give `x.x..x.`
+- **not always** (computed 2026-10-23): at 8 cells, `xxx..x..` and `xx.xx...`
+  have the same family weights but aren't rotations or mirrors of each other
+- **established names** (_from memory_): spacers with the same autocorrelation
+  are **homometric** in crystallography, where recovering a structure from its
+  autocorrelation is the **phase problem**; in music theory, pitch-class sets
+  with the same interval content that aren't related by transposition or
+  inversion are **Z-related**
+- **weak emergence** (_from memory_): philosophy of science's term for
+  properties of a whole that are derivable from its parts in principle, but
+  only visible at the level of the whole
+
 ### more dimensions
 
 noted 2026-10-22: everything in `documentation/spacer.md` is worked out for one
@@ -832,3 +854,4 @@ background:
 - "phantom types" / "branded types" / newtype
 - "database views" / "numpy views" / "model view controller" / CQRS projections
 - "threshold decomposition" / "stack filters" / "layer cake representation" / "level sets"
+- "homometric sets" / "phase problem" / "Z-relation" pitch-class sets / "weak emergence"

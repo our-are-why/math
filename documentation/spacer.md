@@ -643,7 +643,7 @@ circularly one is the other started from a different cell.
 - a member's **spacer weight** (or score) is the weights added up at its
   points: how much it agrees with the whole, itself included. A's is
   2 + 2 + 3 = 7; B's and C's are 6
-- an ordered stack has a **build-up**: its running weights as each member goes
+- an ordered stack has **stages**: its running weights as each member goes
   on. unlike the final weights, it depends on the order:
 
       after A    1 1 0 0 0 1 0 0
@@ -654,11 +654,22 @@ weights are a derived result, and for most stacks they're just that: a count.
 but when the spacers going in are patterned, the weights can carry structure of
 their own, and become objects worth studying in their own right: a space of
 amounts, where the amount works almost like an extra dimension. that world is
-noted here, not explored.
+noted here, not explored. the weights are derived, but they can show structure
+of the whole that no member shows on its own: what's sometimes called weak
+emergence.
 
 weights are written as a row of numbers, which are amounts, not states (rule
 4): `|2 2 0 1 0 3 1 0|`. `Weights((A, B, C))` gives a stack's weights as such a
 row.
+
+the row takes the stack's reading, written with the same edges: circular
+members give `)2 2 0 1 0 3 1 0(`, linear ones `<2 2 0 1 0 3 1 0>`, and fluid ones
+`|2 2 0 1 0 3 1 0|`. the display form keeps the edges, since no cells are drawn.
+for example, `Weights( )(A, B, C)( )` gives `)2 2 0 1 0 3 1 0(`.
+
+the stages are written as a sequence of rows, one per step: `Stages((A, B, C))`
+gives `(|1 1 0 0 0 1 0 0|, |2 1 0 1 0 2 0 0|, |2 2 0 1 0 3 1 0|)`. its last row
+is the stack's weights.
 
 ("weight" has another meaning in coding theory, where a string's weight is its
 number of 1s; here, that's density. here, weights are always taken across a
